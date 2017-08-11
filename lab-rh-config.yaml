@@ -1,0 +1,123 @@
+rh-logger:
+  logging-backend: default
+  default:
+    version: 1
+    handlers:
+      console:
+        class : logging.StreamHandler
+        formatter: default
+        level: INFO
+    formatters:
+      brief:
+        format: '%(message)s'
+      default:
+        format: '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
+        datefmt: '%Y-%m-%d %H:%M:%S'
+    root:
+      handlers: [console]
+      level: INFO
+bfly:
+  allowed-paths:
+    - /n/coxfs01/leek/dropbox
+    - /n/coxfs01/data
+    - /n/coxfs01/leek/data
+  datasource:
+    - hdf5
+  suppress-tornado-logging: False
+  experiments:
+    - name: ECS_iarpa201610_w11_8k_8k_cropped
+      samples:
+        - name: neocortex
+          datasets:
+          - name: sem
+            channels:
+            - name: raw
+              datasource: hdf5
+              path: /n/coxfs01/data/2844_W11_8k_8k.json
+              short-description: raw
+              data-type: uint8
+              dimensions:
+                  x: 8192
+                  y: 8192
+                  z: 273
+    - name: ECS_iarpa_w04_w10
+      samples:
+        - name: neocortex
+          datasets:
+          - name: sem
+            channels:
+            - name: raw
+              datasource: hdf5
+              path: /n/coxfs01/data/ECS_iarpa_w04_w10/ECS_iarpa_w04_w10.json
+              short-description: raw
+              data-type: uint8
+              dimensions:
+                  x: 16384
+                  y: 16384
+                  z: 1774
+    - name: ECS_train_images
+      samples:
+      - name: neocortex
+        datasets:
+        - name: sem
+          channels:
+          - name: raw
+            datasource: hdf5
+            path: /n/coxfs01/leek/data/ECS_train_images.json
+            short-description: raw
+            data-type: uint8
+            dimensions:
+              x: 1496
+              y: 1496
+              z: 97
+          - name: gt
+            datasource: hdf5
+            path: /n/coxfs01/leek/data/ECS_train_images_gt.json
+            data-type: uint16
+            dimensions:
+              x: 1496
+              y: 1496
+              z: 97
+    - name: ECS_iarpa_201610_gt_4x6x6
+      samples:
+      - name: neocortex
+        datasets:
+        - name: sem
+          channels:
+          - name: raw
+            datasource: hdf5
+            path: /n/coxfs01/data/butterfly/ECS_iarpa201610_all_annotation/gt-4x6x6/gt-4x6x6_image.json
+            short-description: raw
+            data-type: uint8
+            dimensions:
+              x: 1496
+              y: 1496
+              z: 145
+          - name: gt
+            datasource: hdf5
+            path: /n/coxfs01/data/butterfly/ECS_iarpa201610_all_annotation/gt-4x6x6/seg_groundtruth0.json
+            short-description: labels
+            data-type: uint32
+            dimensions:
+              x: 1496
+              y: 1496
+              z: 145
+          - name: synapse
+            datasource: hdf5
+            path: /n/coxfs01/data/butterfly/ECS_iarpa201610_all_annotation/gt-4x6x6/synapse_groundtruth.json
+            short-description: synapse-labels
+            data-type: uint32
+            dimensions:
+              x: 1496
+              y: 1496
+              z: 145
+ipc:
+  address: tcp://127.0.0.1:7051
+
+neuroproof:
+  neuroproof_graph_predict: path-to/fast_neuroproof/build/NeuroProof_plan
+  ld_library_path:
+    - path-to/cilkplus-install/lib64
+
+luigid:
+  db_connection: sqlite:////path-to/.luigid/luigi-task-hist.db
