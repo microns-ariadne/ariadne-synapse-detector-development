@@ -29,6 +29,14 @@ $ cd butterfly
 $ pip install .
 ```
 
+## Specifying your classifier
+
+The script will pickle your classifier, which should consist of a Keras
+model .json file and an HDF5 weights file. You have to rename
+"example_classifier.yaml" to "classifier.yaml" (in this directory) and
+then edit classifier.yaml with the details regarding your classifier. The
+classifier.yaml file should be self-documenting.
+
 ## Running
 
 You should have coxfs01 mounted on your system as /n/coxfs01 (if not, you'll
@@ -38,7 +46,6 @@ Set the following environment variables:
 
 MICRONS_TMP_DIR - a directory for intermediate results and logfiles
 MICRONS_ROOT_DIR - a directory for the report.json file
-MICRONS_CLASSIFIER - the path to the synapse.pkl file to run
 
 Do the following from this directory:
 ```
@@ -57,3 +64,8 @@ k = KerasClassifier(<path-to-model-file>, <path-to-weights-file>...)
 import cPickle
 cPickle.dump(k, open(<path-to-pickle-file>, "w"))
 ```
+
+## Troubleshooting
+
+During the pipeline, Luigi is running on your computer at port 8082. Go to
+http://localhost:8082 to see your progress.

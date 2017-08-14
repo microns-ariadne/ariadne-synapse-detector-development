@@ -1,0 +1,106 @@
+############################################
+#
+# Example classifier.yaml file.
+#
+# Please edit this and save as classifier.yaml when running the run_synapse.sh
+# pipeline. This is currently set up to pickle the classifier from May 4, 2017
+# as it was run for the 100um cube (mount /n/coxfs01 to run)
+#
+#############################################
+
+classifier:
+    #
+    # The neural network framework for the model. Currently only Keras
+    # supported.
+    #
+    framework: keras
+    #
+    # The path to the Keras model file
+    #
+    model-path: /n/coxfs01/leek/classifiers/2017-05-04/3D_unet_ecs_synapse_polarity_pre_linear_316_32_115000.json
+    #
+    # The weights
+    #
+    weights-path: /n/coxfs01/leek/classifiers/2017-05-04/3D_unet_ecs_synapse_polarity_pre_linear_316_32_115000_weights.h5
+    #
+    # The block size is the size of an input block into the classifier,
+    # specified as z, y, x
+    #
+    block-size: [ 32, 316, 316 ]
+    #
+    # The xy-pad size is the amount of padding that must be added in the x
+    # and y directions. It's also 1/2 of the amount of reduction in the
+    # size of the output image. For example, an xy-pad size of 44 would
+    # result in an output image size of 228.
+    #
+    xy-pad-size: 44
+    #
+    # The z-pad-size is the same as xy-pad-size, except in z.
+    #
+    z-pad-size: 14
+    #
+    # The trim size is the amount to remove after classifying. Some classifiers
+    # are built so that the output size is the same as the input size with
+    # the assumption being that an unknown amount of the border is of
+    # substandard quality. These tell you how much to trim from that border.
+    #
+    xy-trim-size: 0
+    z-trim-size: 0
+    #
+    # "classes" gives the class names from the output in the order they
+    # appear in the tensor. For synapses, use ["synapse"] if no polarity
+    # or ["transmitter", "receptor"] if polarity.
+    #
+    #classes: [ synapse ]
+    classes: [ transmitter, receptor ]    
+    #
+    # The normalize method tells which normalization algorithm was used during
+    # training (and which should be used to normalize for testing).
+    #
+    # You should know which one you used.
+    #
+    normalize-method: MATCH_ECS
+    #
+    # The normalize-offset is the offset that should be subtracted from the
+    # image after normalizing to the range 0 - 1. Typical values are .5 or 0
+    #
+    normalize-offset: .5
+    #
+    # The normalize-saturation-level only applies to the RESCALE method.
+    # It is the fraction of outliers to be removed.
+    #
+    normalize-saturation-level: 0.05
+    #
+    # downsample-factor - Some classifiers operate on 1/2 resolution image
+    #     data. The downsample factor controls this. A downsample factor of
+    #     1.0 should be used if no downsampling is done. A downsample factor
+    #     of 2.0 should be used for 1/2 res classifiers.
+    #
+    downsample-factor: 2
+    #
+    # stretch-output - if True, stretch the probability map output to 0 - 255
+    #
+    stretch-output: False
+    #
+    # invert - if True, invert the probability map (255 - probs)
+    #
+    invert: False
+    #
+    # split-positive-negative - for synapse probabilities, turn a single
+    #     channel into two by rectifying (np.maximum(0, probs)) the output
+    #     to get the first channel and by inverse-rectifying
+    #     (np.maximum(0, -probs)) the output to get the second channel
+    #
+    split-positive-negative: True
+    #
+    # transpose - tells how to construct the input tensor. Typically, there
+    #             is a 5D tensor where one of the dimensions is batch number
+    #             and the other is channel, which we don't use. This tells
+    #             you how to create that 5-d tensor. Empty slots are
+    #             specified as None and you have the opportunity to transpose
+    #             the remaining ones by specifying the dimension order.
+    #             The default is [None, None, 0, 1, 2] which means that
+    #             the first two dimensions should be left blank, z should
+    #             go in slot 2, y in slot 3 and x in slot 4
+    #
+    transpose: [ None, None, 0, 1, 2 ]

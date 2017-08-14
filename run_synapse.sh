@@ -24,6 +24,16 @@ fi
 
 #######################################################################
 #
+# Make the classifier pkl file
+#
+#######################################################################
+
+MICRONS_CLASSIFIER=$MICRONS_ROOT_DIR/syanpse-classifier.pkl
+
+python pickle_synapse_classifier.py $MICRONS_CLASSIFIER
+
+#######################################################################
+#
 # Read parameters from the classifier file.
 #
 #######################################################################
