@@ -56,8 +56,11 @@ def main():
                 pass
         shutil.rmtree(temp)
 
-    with open(args.yaml_file, 'r') as f:
-        data = yaml.load(f)
+    try:
+        with open(args.yaml_file, 'r') as f:
+            data = yaml.load(f)
+    except IOError:
+        data = None
 
     if data is None:
         data = {'models': []}
