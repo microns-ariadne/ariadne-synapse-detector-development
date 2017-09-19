@@ -86,6 +86,7 @@ def main():
             weights_path)
 
     print('Compressing files')
+    args.output = os.path.abspath(args.output)
     with tarfile.open(args.output, 'w') as tar:
         tar.add(args.classifier, arcname=os.path.basename(args.classifier))
         tar.add(model_path, arcname=os.path.basename(model_path))
