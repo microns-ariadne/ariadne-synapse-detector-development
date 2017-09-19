@@ -88,12 +88,11 @@ def main():
     print('Compressing files')
     with tarfile.open(args.output, 'w') as tar:
         tar.add(args.classifier, arcname=os.path.basename(args.classifier))
-        tar.add(model_file, arcname=os.path.basename(model_file))
-        tar.add(weights_file, arcname=os.path.basename(weights_file))
+        tar.add(model_path, arcname=os.path.basename(model_path))
+        tar.add(weights_path, arcname=os.path.basename(weights_path))
 
     print('Done')
     print('The compressed archive has been saved to: {}'.format(args.output))
-    print('MD5 Hash: {}'.format(hashlib.md5(local_path).hexdigest()))
 
 if __name__ == '__main__':
     main()
