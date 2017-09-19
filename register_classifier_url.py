@@ -60,15 +60,16 @@ def main():
         data = yaml.load(f)
 
     if data is None:
-        data = {}
+        data = {'models': []}
 
-    model_name = 'model{}'.format(len(data))
-    data[model_name]['url'] = args.url
+    model = {}
+    model['url'] = args.url
     with open(args.classifier, 'r') as f:
-        data[model_name]['hash'] = hashlib.md5(f.read()).hexdigest()
-    data[model_name]['author'] = args.author
-    data[model_name]['submission-date'] = time.time()
+        model['hash'] = hashlib.md5(f.read()).hexdigest()
+    model['author'] = args.author
+    model['submission-date'] = time.time()
 
+    data['models'].append(model)
     with open(args.yaml_file, 'w') as f:
         yaml.dump(data, f)
 
