@@ -1,63 +1,74 @@
 import pytest
 
 import argparse
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import os
 import shutil
 import tempfile
 
+import h5py
+import numpy as np
+
 from ariadne_test_harness import parse_args, prep, load_urls
 from ariadne_test_harness import should_evaluate_model, download_model
-from ariadne_test_harness import get_model_info, update_paths, run_pipeline
+from ariadne_test_harness import update_paths, run_pipeline
 from ariadne_test_harness import format_results, load_vi, calculate_nri
-from ariadne_test_harness import update_database, clean_up, main
+from ariadne_test_harness import update_database, main
 from ariadne_test_harness import PrepFailedException
-
-
-def setup():
-    base = os.path.dirname(__file__)
-    temp = prep(os.path.join(
-                    base,
-                    '2017-05-04_membrane_2017-05-04_synapse.pkl'),
-                os.path.join(
-                    base,
-                    '2017-05-04_membrane.pkl'),
-                os.path.join(
-                    base,
-                    '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000.json'),
-                os.path.join(
-                    base,
-                    '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000_weights.h5'))
-
-    pairs = get_model_info(os.path.join(base, 'test_files'))
-    return base, temp, pairs
 
 
 def test_prep():
     # Ensure that the temporary directories are set up correctly
     base = os.path.join(os.path.dirname(__file__), 'test_files', 'prep')
-    temp = prep(os.path.join(
-                    base,
-                    '2017-05-04_membrane_2017-05-04_synapse.pkl'),
-                os.path.join(
-                    base,
-                    '2017-05-04_membrane.pkl'),
-                os.path.join(
-                    base,
-                    '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000.json'),
-                os.path.join(
-                    base,
-                    '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000_weights.h5')
-                )
-    assert os.path.isdir(temp)
-    assert os.path.isdir(os.path.join(temp, 'classifiers'))
-    assert os.path.isdir(os.path.join(temp, 'results'))
-    assert os.path.isdir(os.path.join(temp, 'test_subject'))
-    assert os.path.isfile(os.path.join(temp, 'classifiers', '2017-05-04_membrane_2017-05-04_synapse.pkl'))
-    assert os.path.isfile(os.path.join(temp, 'classifiers', '2017-05-04_membrane.pkl'))
-    assert os.path.isfile(os.path.join(temp, 'classifiers', '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000.json'))
-    assert os.path.isfile(os.path.join(temp, 'classifiers', '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000_weights.h5'))
+    temp, classifiers, results, test_subject = \
+        prep(os.path.join(
+                base,
+                '2017-05-04_membrane_2017-05-04_synapse.pkl'),
+             os.path.join(
+                base,
+                '2017-05-04_membrane.pkl'),
+             os.path.join(
+                base,
+                '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000.json'),
+             os.path.join(
+                base,
+                '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000_weights.h5'))
 
-    os.rmtree(temp)
+    aggregate = os.path.join(
+        classifiers,
+        '2017-05-04_membrane_2017-05-04_synapse.pkl')
+    membrane = os.path.join(
+        classifiers,
+        '2017-05-04_membrane.pkl')
+    membrane_model = os.path.join(
+        classifiers,
+        '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000.json')
+    membrane_weights = os.path.join(
+        classifiers,
+        '3D_unet_ecs_pixel_half_same_unnorm_380_12_47000_weights.h5')
+
+    assert os.path.isdir(temp)
+    assert os.path.isdir(classifiers)
+    assert os.path.isdir(results)
+    assert os.path.isdir(test_subject)
+    assert os.path.isfile(aggregate)
+    assert os.path.isfile(membrane)
+    assert os.path.isfile(membrane_model)
+    assert os.path.isfile(membrane_weights)
+
+    with open(aggregate, 'r') as f:
+        c = pickle.load(f)
+    assert c.pickle_paths[0] == membrane
+
+    with open(membrane, 'r') as f:
+        c = pickle.load(f)
+    assert c.model_path == membrane_model
+    assert c.weights_path == membrane_weights
+
+    shutil.rmtree(temp)
 
     # Test for exception in the case that the classifiers don't exist
     with pytest.raises(PrepFailedException):
@@ -123,18 +134,21 @@ def test_load_urls():
                             'test_files',
                             'load_urls')
 
+    syn1 = ('test_files/download_model/synapse1.tar.gz',
+            'aa2abfe41ae4592d4505e28a04d96ffe')
+
+    syn2 = ('test_files/download_model/synapse2.tar.gz',
+            '4aea190003303370f41c6775cd789ad5')
+
+    # Test with ideal input
     pairs = load_urls(os.path.join(testpath, 'urls.yaml'))
-    assert pairs[0] == ('test_files/download_model/synapse1.tar.gz',
-                        'aa2abfe41ae4592d4505e28a04d96ffe')
-    assert pairs[1] == ('test_files/download_model/synapse2.tar.gz',
-                        '4aea190003303370f41c6775cd789ad5')
+    assert syn1 in pairs
+    assert syn2 in pairs
 
     # Test supplying a directory instead of a yaml file
     pairs = load_urls(testpath)
-    assert pairs[0] == ('test_files/download_model/synapse1.tar.gz',
-                        'aa2abfe41ae4592d4505e28a04d96ffe')
-    assert pairs[1] == ('test_files/download_model/synapse2.tar.gz',
-                        '4aea190003303370f41c6775cd789ad5')
+    assert syn1 in pairs
+    assert syn2 in pairs
 
     # Test supplying a non-yaml file
     pairs = load_urls(__file__)
@@ -194,7 +208,8 @@ def test_should_evaluate_model():
 def test_download_model():
     # Prepare the test
     temp = tempfile.mkdtemp()
-    os.mkdir(os.path.join(temp, 'test_subject'))
+    temp = os.path.join(temp, 'test_subject')
+    os.mkdir(temp)
 
     db = []
     db.append({'url': 'test_files/download_model/synapse1.tar.gz',
@@ -204,46 +219,34 @@ def test_download_model():
 
     # Test on one model
     assert download_model(db[0]['url'], db[0]['hash'], temp) is True
+    assert os.path.isfile(os.path.join(temp, 'synapse1.tar.gz'))
     assert os.path.isfile(os.path.join(
         temp,
-        'test_subject',
         '2017-05-04_synapse.pkl'))
     assert os.path.isfile(os.path.join(
         temp,
-        'test_subject',
-        'classifier.yaml'))
-    assert os.path.isfile(os.path.join(
-        temp,
-        'test_subject',
         '3D_unet_ecs_synapse_polarity_pre_linear_316_32_115000.json'))
     assert os.path.isfile(os.path.join(
         temp,
-        'test_subject',
         '3D_unet_ecs_synapse_polarity_pre_linear_316_32_115000_weights.h5'))
 
-    shutil.rmtree(os.path.join(temp, 'test_subject'))
-    os.mkdir(os.path.join(temp, 'test_subject'))
+    shutil.rmtree(temp)
+    os.mkdir(temp)
 
     # Test on the other model
     assert download_model(db[1]['url'], db[1]['hash'], temp) is True
+    assert os.path.isfile(os.path.join(temp, 'synapse2.tar.gz'))
     assert os.path.isfile(os.path.join(
         temp,
-        'test_subject',
         '2017-05-04_synapse.pkl'))
     assert os.path.isfile(os.path.join(
         temp,
-        'test_subject',
-        'classifier.yaml'))
-    assert os.path.isfile(os.path.join(
-        temp,
-        'test_subject',
         '3D_unet_ecs_synapse_polarity_pre_linear_316_32_115000.json'))
     assert os.path.isfile(os.path.join(
         temp,
-        'test_subject',
         '3D_unet_ecs_synapse_polarity_pre_linear_316_32_115000_weights.h5'))
 
-    shutil.rmtree(os.path.join(temp, test_subject))
+    shutil.rmtree(os.path.dirname(temp))
 
     # Test on invalid url
     assert download_model('file:///foo/bar.tgz', 'dummy', temp) is False
@@ -348,7 +351,33 @@ def test_update_paths():
 
 
 def test_run_pipeline():
-    pass
+    base = os.path.join(
+        os.path.dirname(__file__),
+        'test_files',
+        'run_pipeline')
+    temp = tempfile.mkdtemp()
+    aggregate = os.path.join(
+        base,
+        '2017-05-04_membrane_2017-05-04_synapse.pkl')
+    neuroproof = os.path.join(base, 'neuroproof', 'agglo_classifier_itr1.h5')
+    rh_config = os.path.join(base, '.rh-config.yaml')
+
+    # Test on the ideal case
+    assert run_pipeline(temp, aggregate, neuroproof, rh_config) is True
+    assert os.path.isfile(os.path.join(temp, 'stitched_segmentation.h5'))
+    assert os.path.isfile(os.path.join(temp, 'segmentation-statistics.csv'))
+
+    shutil.rmtree(temp)
+
+    # Test with invalid results path
+    invalid = '/foo/bar'
+    assert run_pipeline(temp, aggregate, neuroproof, rh_config) is False
+
+    # Test with invalid aggregate classifier
+    assert run_pipeline(temp, neuroproof, neuroproof, rh_config) is False
+
+    # Test with invalid neuroproof classifier
+    assert run_pipeline(temp, aggregate, aggregate, rh_config) is False
 
 
 def test_format_results():
@@ -372,10 +401,13 @@ def test_format_results():
     format_results(base, (145, 1496, 1496))
 
     with h5py.File(os.path.join(base, 'synapse_segmentation.h5'), 'r') as f:
-        assert f[f.keys()[0]][:] == actual_synapse
+        assert np.array_equal(f[f.keys()[0]][:], actual_synapse)
 
     with h5py.File(os.path.join(base, 'presynaptic_map.h5'), 'r') as f:
-        assert f[f.keys()[0]][:] == actual_presynaptic
+        assert np.array_equal(f[f.keys()[0]][:], actual_presynaptic)
+
+    os.remove(os.path.join(base, 'synapse_segmentation.h5'))
+    os.remove(os.path.join(base, 'presynaptic_map.h5'))
 
     del actual_synapse
     del actual_presynaptic
@@ -390,6 +422,8 @@ def test_format_results():
     with h5py.File(os.path.join(temp, 'presynaptic_map.h5'), 'r') as f:
         assert np.all(f[f.keys()[0]][:] == 0)
 
+    shutil.rmtree(temp)
+
 
 def test_load_vi():
     base = os.path.join(
@@ -398,7 +432,7 @@ def test_load_vi():
         'load_vi')
 
     # Test the standard calculation
-    vi = load_vi(temp)
+    vi = load_vi(os.path.join(base, 'segmentation-statistics.csv'))
     assert vi['F_info'] == 0.9180095670059799
     assert vi['F_info_merge'] == 0.8743014354541885
     assert vi['F_info_split'] == 0.966317785639555
@@ -416,14 +450,11 @@ def test_load_vi():
     assert vi['z'] == 14
 
     # Test on invalid csv file
-    f = open(os.path.join(temp, 'results', 'segmentation_statistics.csv'), 'w')
-    f.close()
-    vi = load_vi(temp)
+    vi = load_vi(os.path.join(base, 'segmentation_statistics.csv'))
     assert vi == {}
 
-    # Test on an empty directory
-    os.remove(os.path.join(temp, 'results', 'segmentation_statistics.csv'))
-    vi = load_vi(temp)
+    # Test on non-existent file
+    vi = load_vi(os.path.join(base, 'foo.csv'))
     assert vi == {}
 
 
@@ -431,7 +462,7 @@ def test_calculate_nri():
     base = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         'test_files',
-        'claculate_nri')
+        'calculate_nri')
 
     # Test on the standard case
     nri = calculate_nri(
@@ -447,11 +478,23 @@ def test_calculate_nri():
     assert nri['recall'] == 0.400
 
     # Test when results do not exist
-    os.remove(os.path.join(temp, 'results', 'stitched_segmentation.h5'))
-    os.remove(os.path.join(temp, 'results', 'synapse_segmentation.h5'))
-    os.remove(os.path.join(temp, 'results', , 'presynaptic_map.h5'))
-    nri = calculate_nri()
+    nri = calculate_nri(
+        '/tmp',
+        os.path.join(base, 'seg_groundtruth0.h5'),
+        os.path.join(base, 'synapse_groundtruth.h5'))
+    assert nri == {}
 
+    # Test when ground truth does not exist
+    nri = calculate_nri(
+        base,
+        os.path.join('/tmp', 'seg_groundtruth0.h5'),
+        os.path.join(base, 'synapse_groundtruth.h5'))
+    assert nri == {}
+
+    nri = calculate_nri(
+        '/tmp',
+        os.path.join(base, 'seg_groundtruth0.h5'),
+        os.path.join('/tmp', 'synapse_groundtruth.h5'))
     assert nri == {}
 
 

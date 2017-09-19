@@ -1,6 +1,5 @@
 import argparse
 import csv
-# from email.mime.text import MIMEText
 import glob
 import hashlib
 import json
@@ -10,7 +9,7 @@ try:
 except ImportError:
     import pickle
 import re
-# import smtplib
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -32,12 +31,16 @@ class PrepFailedException(Exception):
 def parse_args(args=None):
     p = argparse.ArgumentParser()
 
-    p.add_argument('-d', '--database',
-                   help='path to the JSON database file',
+    p.add_argument('--url-files',
+                   help='path to model url file or directory',
                    type=str)
 
-    p.add_argument('-f', '--url-files',
-                   help='path to model url file or directory',
+    p.add_argument('--membrane-gt',
+                   help='path to membrane ground truth',
+                   type=str)
+
+    p.add_argument('--synapse-gt',
+                   help='path to synapse ground truth',
                    type=str)
 
     p.add_argument('--aggregate-classifier',
@@ -54,6 +57,14 @@ def parse_args(args=None):
 
     p.add_argument('--membrane-classifier-weights',
                    help='path to the membrane classifier weights file',
+                   type=str)
+
+    p.add_argument('--database',
+                   help='path to the JSON database file',
+                   type=str)
+
+    p.add_argument('--rh-config',
+                   help='path to the .rh-config.yaml file for the pipeline',
                    type=str)
 
     return p.parse_args(args)
@@ -88,6 +99,11 @@ def prep(agg, membrane, model, weights):
     exit. Errors at this stage indicate a more endemic issue that will affect
     testing all models.
     """
+    try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
     rh_logger.logger.report_event("Preparing workspace")
 
     # Set up a temporary workspace
@@ -106,7 +122,7 @@ def prep(agg, membrane, model, weights):
         rh_logger.logger.report_exception(
             exception=e,
             msg="Could not create directories")
-        shutil.rmtree(temp)
+        shutil.rmtree(tempdir)
         raise PrepFailedException
 
     # Copy the aggregate classifier, membrane classifier, membrane classifier
@@ -126,14 +142,15 @@ def prep(agg, membrane, model, weights):
         rh_logger.logger.report_event('Copying membrane classifier model file')
         shutil.copy(os.path.abspath(model), temp_model)
 
-        rh_logger.logger.report_event('Copying membrane classifier weights file')
+        rh_logger.logger.report_event(
+            'Copying membrane classifier weights file')
         shutil.copy(os.path.abspath(weights), temp_weights)
 
     except IOError as e:
         rh_logger.logger.report_exception(
             exception=e,
             msg="Could not copy classifier files")
-        shutil.rmtree(temp)
+        shutil.rmtree(tempdir)
         raise PrepFailedException
 
     # Set the filepaths in the aggregate and membrane classifiers to point to
@@ -155,7 +172,7 @@ def prep(agg, membrane, model, weights):
         rh_logger.logger.report_exception(
             exception=e,
             msg='File could not be pickled.')
-        shutil.rmtree(temp)
+        shutil.rmtree(tempdir)
         raise PrepFailedException
 
     return (tempdir, temp_classifiers, temp_results, temp_test_subject)
@@ -176,7 +193,13 @@ def load_urls(urlpath):
         A list of 2-tuples with the URL as the first element and the model
         archive hash as the second.
     """
-    rh_logger.report_event("Loading URL/hash pairs from {}".format(urlpath))
+    try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
+    rh_logger.logger.report_event(
+        "Loading URL/hash pairs from {}".format(urlpath))
     pairs = []
     files = []
 
@@ -198,7 +221,7 @@ def load_urls(urlpath):
                 for model in meta:
                     pairs.append((meta[model]['url'], meta[model]['hash']))
 
-        except (KeyError, FileNotFoundError, yaml.scanner.ScannerError) as e:
+        except (KeyError, IOError, yaml.scanner.ScannerError) as e:
             # Skip over files that throw errors, recording file name and error
             rh_logger.logger.report_exception(
                 exception=e,
@@ -226,6 +249,11 @@ def should_evaluate_model(db, url, md5_hash):
     True if the model has not previously been evaluated by the test harness,
     False otherwise.
     """
+    try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
     rh_logger.logger.report_event('Determining if model is in database')
     for i in range(len(db)):
         try:
@@ -262,6 +290,11 @@ def download_model(url, md5_hash, temp_test_subject):
     Returns
     -------
     """
+    try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
     rh_logger.logger.report_event('Downloading model {}'.format(url))
 
     if os.path.isfile(url):
@@ -270,7 +303,7 @@ def download_model(url, md5_hash, temp_test_subject):
     try:
         local_path = os.path.join(temp_test_subject, os.path.basename(url))
         urllib.urlretrieve(url, local_path)
-    except (urllib.URLError, HTTPError) as e:
+    except IOError as e:
         rh_logger.logger.report_exception(
             exception=e,
             msg='Could not download {}'.format(url))
@@ -291,7 +324,7 @@ def download_model(url, md5_hash, temp_test_subject):
             elif zipfile.is_zipfile(local_path):
                 with zipfile.ZipFile(local_path, 'r') as z:
                     z.extractall()
-                    os.path.join(tempdir, 'test_subject')
+                    os.path.join(temp_test_subject)
     except IOError as e:
         rh_logger.logger.report_exception(exception=e)
         return False
@@ -314,6 +347,11 @@ def update_paths(aggregate, synapse, synapse_model, synapse_weights):
         Path to the synapse classifier weights file.
     """
     try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
+    try:
         success = True
         with open(aggregate, 'r') as f:
             c = pickle.load(f)
@@ -323,11 +361,14 @@ def update_paths(aggregate, synapse, synapse_model, synapse_weights):
 
         with open(synapse, 'r') as f:
             c = pickle.load(f)
-        c.model_path = synapse_model
-        c.weights_path = synapse_weights
+        if hasattr(c, 'model_path') and hasattr(c, 'weights_path'):
+            c.model_path = synapse_model
+            c.weights_path = synapse_weights
+        else:
+            raise AttributeError
         with open(synapse, 'w') as f:
             pickle.dump(c, f)
-    except OSError as e:
+    except IOError as e:
         success = False
         rh_logger.logger.report_exception(exception=e,
                                           msg='Error opening file.')
@@ -348,29 +389,36 @@ def update_paths(aggregate, synapse, synapse_model, synapse_weights):
     return success
 
 
-def run_pipeline(temp_results, aggregate, synapse, neuroproof):
+def run_pipeline(temp_results, aggregate, neuroproof, rh_config):
     """Run the ARIADNE pipeline on the test subject synapse classifier.
 
     Parameters
     ----------
 
     """
+    try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
     args = [
         'bash',
-        os.path.join(os.path.dirname(__file__), 'run_synapse.sh'),
-        os.path.join(tempfile, 'results'),
-        os.path.join(tempfile,
-                     'classifiers',
-                     '2017-05-04_membrane_2017-05-04_synapse.pkl'),
-        str(padding[0] if padding[0] >= 0 and padding[0] < 145 else 0),
-        str(padding[1] if padding[1] >= 0 and padding[1] < 1496 else 0),
-        str(padding[2] if padding[2] >= 0 and padding[2] < 1496 else 0),
+        os.path.join(os.path.dirname(__file__), 'run_ecs_test.sh'),
+        temp_results,
+        aggregate,
+        neuroproof,
+        rh_config
     ]
 
-    if classes == ['transmitter', 'receptor']:
-        args.append('--wants-transmitter-receptor-synapse-maps')
-
-    subprocess.call(args, shell=True)
+    try:
+        subprocess.check_output(args, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        rh_logger.logger.report_exception(
+            exception=e,
+            msg='Pipeline did not complete segmentation')
+        return False
+    else:
+        return True
 
 
 def format_results(temp_results, shape):
@@ -383,6 +431,11 @@ def format_results(temp_results, shape):
     shape : tuple of (int, int, int)
         The 3D shape of the raw image stack.
     """
+    try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
     synapses = np.zeros(shape, dtype=np.uint16)
     presynaptic = np.zeros(shape, dtype=np.uint8)
 
@@ -390,26 +443,26 @@ def format_results(temp_results, shape):
         plans = glob.glob(os.path.join(root, '*.loading.plan'))
         if len(files) > 0 and len(plans) > 0:
             for plan in plans:
-                if plan.find('synapse_segmentation') >= 0:
+                if plan.find('synapse-segmentation') >= 0:
                     seg = DestVolumeReader(plan).imread()
-                    offset = plan.split('_')[1:-1]
+                    offset = os.path.basename(plan).split('_')[1:-1]
                     s = []
                     e = []
                     for i in offset:
                         idx = i.split('-')
-                        s.append(idx[0])
-                        e.append(idx[0])
+                        s.append(int(idx[0]))
+                        e.append(int(idx[1]))
                     synapses[s[2]:e[2], s[1]:e[1], s[0]:e[0]] += seg
 
                 if plan.find('transmitter') >= 0:
                     seg = DestVolumeReader(plan).imread()
-                    offset = plan.split('_')[1:-1]
+                    offset = os.path.basename(plan).split('_')[1:-1]
                     s = []
                     e = []
                     for i in offset:
                         idx = i.split('-')
-                        s.append(idx[0])
-                        e.append(idx[0])
+                        s.append(int(idx[0]))
+                        e.append(int(idx[1]))
                     presynaptic[s[2]:e[2], s[1]:e[1], s[0]:e[0]] += seg
 
     outpath = os.path.join(temp_results, 'synapse_segmentation.h5')
@@ -431,7 +484,7 @@ def format_results(temp_results, shape):
     #     f.create_dataset(key, data=seg)
 
 
-def load_vi(temp_results):
+def load_vi(stats_file):
     """Load VI results and reformat them to a dictionary.
 
     Parameters
@@ -444,22 +497,34 @@ def load_vi(temp_results):
     vi : dict
         Dictionary containing VI statstics output by the ARIADNE pipeline.
     """
+    try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
+    rh_logger.logger.report_event(
+        'Loading VI information from {}'.format(stats_file))
     vi = {}
-    stats_path = os.path.join(temp_results, 'segmentation_statistics.csv')
     rows = []
     try:
-        with open(stats_path, 'r') as f:
+
+        with open(stats_file, 'r') as f:
             reader = csv.reader(f)
             for row in reader:
                 rows.append(row)
         for i in range(len(rows[0])):
+            rh_logger.logger.report_event(
+                'Adding {} with value {}'.format(rows[0][i], rows[1][i]))
             vi[rows[0][i]] = float(rows[1][i])
-    except OSError as e:
+    except IOError as e:
         rh_logger.logger.report_exception(exception=e,
                                           msg='Results file does not exist')
     except IndexError as e:
         rh_logger.logger.report_exception(exception=e,
                                           msg='Invalid csv file format')
+
+    rh_logger.logger.report_event(
+        'Loaded VI metrics {}'.format(vi))
     return vi
 
 
@@ -478,9 +543,17 @@ def calculate_nri(temp_results, membrane_gt, synapse_gt):
     nri : dict
         Dictionary containing NRI statstics.
     """
+    try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
+    rh_logger.logger.report_event('Calculating NRI information')
+
     nri = {}
 
     # Run the NRI Python script and collect the output
+    rh_logger.logger.report_event('Running nri.py')
     args = [
         'python',
         'nri.py',
@@ -497,20 +570,28 @@ def calculate_nri(temp_results, membrane_gt, synapse_gt):
     ]
 
     try:
-        out = subprocess.check_output(args)
+        out = subprocess.check_output(args, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         out = ''
         rh_logger.logger.report_exception(exception=e,
                                           msg='nri.py failed to run')
 
     # Iterate over each line and capture the precision, recall, and nri values
+    rh_logger.logger.report_event('Captured output {}'.format(out))
     for line in out.splitlines():
         if re.match(r'(Precision:)|(Recall:)|(NRI:)', line) is not None:
             words = line.strip().split()
+            rh_logger.logger.report_event(
+                'Found result {} {}'.format(words[0], words[1]))
             nri[words[0].strip(':').lower()] = float(words[1])
 
-    nri['precision'] = nri['precision'] / 100.0
-    nri['recall'] = nri['recall'] / 100.0
+    if 'precision' in nri:
+        nri['precision'] = nri['precision'] / 100.0
+    if 'recall' in nri:
+        nri['recall'] = nri['recall'] / 100.0
+
+    rh_logger.logger.report_event('Captured NRI values {}'.format(nri))
+
     return nri
 
 
@@ -541,6 +622,11 @@ def update_database(db, url, md5_hash, nri, vi, time):
         The updated database. If results were not added, equivalent to the `db`
         parameter.
     """
+    try:
+        rh_logger.logger.start_process("test_harness", "evaluate", [])
+    except:
+        pass
+
     if len(nri) > 0 and len(vi) > 0:
         entry = {
             'url': url,
@@ -553,8 +639,8 @@ def update_database(db, url, md5_hash, nri, vi, time):
     return db
 
 
-def main():
-    args = parse_args()
+def main(args=None):
+    args = parse_args(args=args)
 
     try:
         rh_logger.logger.start_process("test_harness", "evaluate", [])
@@ -585,7 +671,13 @@ def main():
                         classifiers,
                         os.path.basename(args.aggregate_classifier))
                 except PrepFailedException:
-                    sys.exit(1)
+                    break
+            res = glob.glob(os.path.join(results, '*'))
+            for f in res:
+                if os.path.isdir(f):
+                    shutil.rmtree(f)
+                elif os.path.isfile(f):
+                    os.remove(f)
             # Get the model and its information
             if not download_model(url, md5_hash, test_subject):
                 continue
@@ -600,11 +692,18 @@ def main():
                 synapse_model,
                 synapse_weights,)
 
-            run_pipeline()
+            run_pipeline(results, synapse, args.rh_config)
             format_results(results, shape)
-            vi = load_vi(reaults)
+            vi = load_vi(os.path.join(results, 'segmentation-statistics.csv'))
             nri = calculate_nri(results, args.membrane_gt, args.synapse_gt)
             db = update_database(db, nri, vi)
+
+    try:
+        shutil.rmtree(temp)
+    except OSError as e:
+        rh_logger.logger.report_exception(
+            exception=e,
+            msg='Could not remove temporary workspace at {}.'.format(temp))
 
     with open(args.database, 'w') as f:
         json.dump(db, f)

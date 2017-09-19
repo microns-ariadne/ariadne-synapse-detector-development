@@ -20,7 +20,6 @@ import os
 import tarfile
 import warnings
 
-import yaml
 
 from ariadne_microns_pipeline.classifiers.keras_classifier \
      import NormalizeMethod
@@ -59,27 +58,6 @@ def parse_args(args=None):
     p.parse_args(args)
 
 
-def verify_metadata(metadata, classifier):
-    for key in metadata:
-        attr = key.replace('-', '_')
-
-        if attr.find('pad_size') >= 0:
-            attr = attr.replace('_', '', 1)
-
-        if key == 'normalize-method':
-            key_val = NormalizeMethod[meta[key]]
-        elif key == 'transpose':
-            key_val = map(
-                lambda _: None if isinstance(_, basestring) and
-                          _.lower() == "none" else _,
-                params[key])
-        else:
-            key_val == meta_key
-
-        if key_val != getattr(classifier, attr):
-            warnings.warn(MISMATCH_MESSAGE.format(key, attr), UserWarning)
-
-
 def main():
     args = parse_args()
 
@@ -114,26 +92,11 @@ def main():
             os.strerror(errno.ENOENT),
             weights_path)
 
-    if os.path.isfile(args.metadata):
-        print('\t- {}'.format(args.metadata))
-    else:
-        raise FileNotFoundError(
-            errno.ENOENT,
-            os.strerror(errno.ENOENT),
-            weights_path)
-
-    print('Verifying metadata matches classifier settings')
-    with open(args.metadata, 'r') as f:
-        meta = yaml.load(f)
-
-    verify_metadata(meta, classifier)
-
     print('Compressing files')
     with tarfile.open(args.output, 'w') as tar:
-        tar.add(args.classifier, arcname='synapse_classifier.pkl')
-        tar.add(model_file, arcname='synapse_classifier_model.json')
-        tar.add(weights_file, arcname='synapse_classifier_weights.h5')
-        tar.add(args.metadata, arcname='classifier.yaml')
+        tar.add(args.classifier, arcname=os.path.basename(args.classifier))
+        tar.add(model_file, arcname=os.path.basename(model_file))
+        tar.add(weights_file, arcname=os.path.basename(weights_file))
 
     print('Done')
     print('The compressed archive has been saved to: {}'.format(args.output))
