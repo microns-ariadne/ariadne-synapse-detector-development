@@ -42,18 +42,11 @@ def parse_args(args=None):
 
     p.add_argument('classifier',
                    help='path to the pickled classifier',
-                   type=str,
-                   required=True)
-
-    p.add_argument('metadata',
-                   help='path to the classifier.yaml file for this classifier',
-                   type=str,
-                   required=True)
+                   type=str)
 
     p.add_argument('output',
                    help='the name of the output tar.gz file',
-                   type=str,
-                   required=True)
+                   type=str)
 
     p.parse_args(args)
 
