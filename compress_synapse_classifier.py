@@ -38,7 +38,7 @@ classifier.yaml field {} and pickled classifier attribute {} do not match.
 
 
 def parse_args(args=None):
-    p = parser()
+    p = argparse.ArgumentParser()
 
     p.add_argument('classifier',
                    help='path to the pickled classifier',
