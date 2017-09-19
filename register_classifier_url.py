@@ -74,7 +74,7 @@ def main():
 
     data['models'].append(model)
     with open(args.yaml_file, 'w') as f:
-        yaml.dump(data, f)
+        yaml.dump(data, f, default_flow_style=False)
 
 
 if __name__ == '__main__':
