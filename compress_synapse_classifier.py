@@ -48,7 +48,7 @@ def parse_args(args=None):
                    help='the name of the output tar.gz file',
                    type=str)
 
-    p.parse_args(args)
+    return p.parse_args(args)
 
 
 def main():
