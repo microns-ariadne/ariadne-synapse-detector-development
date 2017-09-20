@@ -61,8 +61,8 @@ def train_keras_model(model, train_gen, batch_size=17, epochs=50):
 
     raw, gt, dists = load()
     config = model.get_config()
-    input_shape = config['config']['layers'][0]['config']['batch_input_shape']
-    output_shape =
+    input_shape = model.layers[0].input_shape
+    output_shape = model.layers[-1].output_shape
     train_gen = augmenting_generator(raw, gt, dists, input_shape, output_shape,
                                      batch_size)
     i, o = next(train_gen)
