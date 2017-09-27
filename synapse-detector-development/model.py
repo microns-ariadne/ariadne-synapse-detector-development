@@ -69,7 +69,7 @@ def train_keras_model(model, train_gen, batch_size=17, epochs=50):
     while o.mean() < 0.01:
         i, o = next(train_gen)
 
-    model.fit_generator(train_gen, 1, epochs, verbose=2,
+    model.fit_generator(train_gen, 50, epochs, verbose=2,
                         callbacks=[CB(model, i, o)])
 
     return model
