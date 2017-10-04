@@ -8,7 +8,7 @@ from .generators import augmenting_generator
 
 import keras.backend as K
 
-def train_model(model, batch_size=17, epochs=50):
+def train_model(model, training_set, *args, **kwargs):
     """Train a neural network model.
 
     Parameters
@@ -25,9 +25,13 @@ def train_model(model, batch_size=17, epochs=50):
     model
         The trained model.
     """
-    return train_keras_model(model, batch_size=batch_size, epochs=epochs)
+    return train_keras_model(model, training_set, *args, **kwargs)
 
-def train_keras_model(model, train_gen, batch_size=17, epochs=50):
+
+def train_keras_model(model, train_gen, steps_per_epoch, epochs, verbose=2,
+                      callbacks=None, validation_data=None,
+                      validation_steps=None, max_queue_size=10, workers=1,
+                      use_multiprocessing=False, initial_epoch=0):
     """Train a neural network model.
 
     Parameters
@@ -59,15 +63,15 @@ def train_keras_model(model, train_gen, batch_size=17, epochs=50):
             f.create_dataset('o', data=self.o)
             f.close()
 
-    raw, gt, dists = load()
-    config = model.get_config()
-    input_shape = model.layers[0].input_shape
-    output_shape = model.layers[-1].output_shape
-    train_gen = augmenting_generator(raw, gt, dists, input_shape, output_shape,
-                                     batch_size)
-    i, o = next(train_gen)
-    while o.mean() < 0.01:
-        i, o = next(train_gen)
+    # raw, gt, dists = load()
+    # config = model.get_config()
+    # input_shape = model.layers[0].input_shape
+    # output_shape = model.layers[-1].output_shape
+    # train_gen = augmenting_generator(raw, gt, dists, input_shape, output_shape,
+    #                                  batch_size)
+    # i, o = next(train_gen)
+    # while o.mean() < 0.01:
+    #     i, o = next(train_gen)
 
     model.fit_generator(train_gen, 50, epochs, verbose=2,
                         callbacks=[CB(model, i, o)])
