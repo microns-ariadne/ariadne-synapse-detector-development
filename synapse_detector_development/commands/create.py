@@ -1,3 +1,20 @@
+"""
+ARIADNE Synapse Detector Development.
+
+Initialize a new synapse detector project. This will not overwrite an existing
+project with the same name found at <path>.
+
+Usage:
+    synapse-detector-development init [-n | --name STRING] <path>
+
+Arguments:
+    path    Path to the directory to instantiate the new project [default: .]
+
+Options:
+    -n | --name     Name of the new synapse detector project [default: synapse-detector]
+
+"""
+
 from .base import BaseCommand
 
 import os
@@ -7,8 +24,8 @@ import sys
 from rh_logger import logger
 
 
-class CreateCommand(BaseCommand):
-    """Create a new training file for synapse detector development.
+class InitCommand(BaseCommand):
+    """Initialize a new synapse detector development project.
 
     Parameters
     ----------
@@ -171,3 +188,16 @@ class CreateCommand(BaseCommand):
                 os.path.join(project_path, 'classifier.yaml')))
 
         return True
+
+
+def main(doc):
+    arguments = docopt(docstring, version='0.0.1')
+
+    if InitCommand(**arguments).run():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main(__doc__)

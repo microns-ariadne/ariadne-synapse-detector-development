@@ -134,6 +134,7 @@ class UploadCommand(BaseCommand):
         c.setopt(c.URL, self.auth_url)
         c.setopt(c.POST, 1)
         c.setopt(c.POSTFIELDS, urlencode(post_data))
+        c.setopt(c.WRITEFUNCTION, lambda x: None)
 
         try:
             c.perform()
@@ -154,6 +155,7 @@ class UploadCommand(BaseCommand):
         """
         c.setopt(c.URL, self.upload_url)
         c.setopt(c.POST, 1)
+        c.setopt(c.WRITEFUNCTION, lambda x: None)
 
         c.setopt(c.HTTPPOST, [
             ('model-name', 'TestModel'),

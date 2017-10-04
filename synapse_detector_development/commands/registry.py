@@ -3,8 +3,8 @@ from .upload import UploadCommand
 
 
 REGISTERED_COMMANDS = {
-    'create': CreateCommand,
-    'upload': UploadCommand
+    'init': CreateCommand,
+    'submit': UploadCommand
 }
 
 
