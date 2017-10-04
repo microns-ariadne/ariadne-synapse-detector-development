@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def augmenting_generator(raw_data, gt_data, dists, input_shape, output_shape,
                          batch_size, ignore_distance=35.0, channel_idx=0):
     """Create a generator that augments data for training.
