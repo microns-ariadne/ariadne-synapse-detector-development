@@ -11,23 +11,27 @@ setup(
     url="https://github.com/jeffkinnison/syndetect",
     packages=['synapse_detector_development',
               'synapse_detector_development.commands',
-              'synapse_detector_development.reference',],
+              'synapse_detector_development.commands.samples',
+              'synapse_detector_development.reference', ],
     include_package_data=True,
     install_requires=[
         'docopt',
-        'keras',
+        'h5py',
+        'keras==1.2.2',
+        'numpy',
         'pycurl',
         'pyyaml',
+        'rh_config',
         'rh_logger',
-        'ariadne_microns_pipeline',
+        'scipy',
     ],
     dependency_links=[
+        'https://github.com/Rhoana/rh_config/archive/1.0.0.tar.gz#egg=rh_config-1.0.0',
         'https://github.com/Rhoana/rh_logger/archive/2.0.0.tar.gz#egg=rh_logger-2.0.0',
-        'git+ssh://git@github.com/microns-ariadne/pipeline_engine.git#egg=ariadne_microns_pipeline-0.1.0',
     ],
     entry_points={
-        'console-scripts': [
+        'console_scripts': [
             "synapse-detector-development = synapse_detector_development.cli:main",
         ]
-    }
+    },
 )
