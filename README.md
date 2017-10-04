@@ -7,12 +7,19 @@ models to an evaluation framework.
 # Table of Contents
 
 [Dependencies](#dependencies)
+
 [Installation](#installation)
+
 [Creating a New Synapse Detector Project](#creating-a-new-synapse-detector-project)
+
 [Developing a New Synapse Detector](#developing-a-new-synapse-detector)
+
 [Training A Synapse Detector](#training-a-synapse-detector)
+
 [Adding Custom Layers (Optional)](#adding-custom-layers-optional)
+
 [Updating the Metadata File](#updating-the-metadata-file)
+
 [Uploading a Model](#uploading-a-model)
 
 # Dependencies
