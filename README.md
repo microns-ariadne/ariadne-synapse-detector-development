@@ -1,20 +1,19 @@
-# Instructions for Harvard lab install for classifier development
+# ARIADNE Synapse Detector development
 
-These are instructions for running the Ariadne pipeline on the R0 dataset
-to produce evaluation metrics for classifiers.
+This repo contains tools and starter scripts for developing synapse detector
+models for use with the ARIADNE pipeline, as well as a tool to upload trained
+models to an evaluation framework.
 
 ## Installation
 
-Installation is for Linux only, tested on Ubuntu 16.04. You must have
+Installation is for Linux only, tested on Ubuntu 16.04 and RHEL 7. You must have
 Anaconda installed. You must also have read access to the Github repos:
 
-```
-https://github.com/VCG/microns_skeletonization
-https://github.com/microns-ariadne/pipeline_engine
+[MICRONS Skeletonization](https://github.com/VCG/microns_skeletonization)
+[ARIADNE Pipeline](https://github.com/microns-ariadne/pipeline_engine)
 
-```
+To install these dependencies, run the following commands:
 
-These are the steps:
 ```
 $ git clone git@github.com:microns-ariadne/pipeline_engine
 $ cd pipeline_engine
@@ -29,43 +28,138 @@ $ cd butterfly
 $ pip install .
 ```
 
-## Specifying your classifier
-
-The script will pickle your classifier, which should consist of a Keras
-model .json file and an HDF5 weights file. You have to rename
-"example_classifier.yaml" to "classifier.yaml" (in this directory) and
-then edit classifier.yaml with the details regarding your classifier. The
-classifier.yaml file should be self-documenting.
-
-## Running
-
-You should have coxfs01 mounted on your system as /n/coxfs01 (if not, you'll
-have to hand-edit lab-rh-config.yaml to change paths).
-
-Set the following environment variables:
-
-MICRONS_TMP_DIR - a directory for intermediate results and logfiles
-MICRONS_ROOT_DIR - a directory for the report.json file
-
-Do the following from this directory:
-```
-$ source activate ariadne_microns_pipeline
-$ ./run_synapse.sh
-```
-
-An example pickle file is /n/coxfs01/leek/classifiers/2017-05-04/2017-05-04_synapse.pkl
-Pickling a classifier is TODO. For now, start IPython and type
+Then, run the following commands to install the tools in this repository:
 
 ```
-from ariadne_microns_pipeline.classifiers.keras_classifier import KerasClassifier
-from ariadne_microns_pipeline.algorithms.normalize import NormalizeMethod
-help(KerasClassifier)
-k = KerasClassifier(<path-to-model-file>, <path-to-weights-file>...)
-import cPickle
-cPickle.dump(k, open(<path-to-pickle-file>, "w"))
+$ git clone https://github.com/microns-ariadne/ariadne-synapse-detector-development
+$ cd ariadne-synapse-detector-development
+$ pip install --editable .
 ```
 
-## Troubleshooting
+To verify installation, run `synapse-detector-development --help`, which should
+display the possible commands to run.
 
-During the pipeline, Luigi is running on your computer at port 8082. Go to
-http://localhost:8082 to see your progress.
+## Creating A New Synapse Detector Project
+
+To initialize a new project, run
+
+```
+synapse-detector-development create -n myproject $HOME
+```
+
+This will create a new directory `myproject` in your home directory with the
+following files:
+
+```
+myproject
+├── classifier.yaml
+├── custom_layers.py
+├── custom_layers.pyc
+└── synapse_detector_training.py
+```
+
+## Developing A New Synapse Detector
+
+The `synapse_detector_training.py` script contains sample code for developing
+and training a new synapse detector using Keras. Develop your Keras model in
+within the `create_model` function on line 54.
+
+```python
+def create_model(in_shape, out_shape):
+    model = unet3d()
+    model.compile(loss='cosine_proximity', optimizer='adam')
+    return model
+```
+
+The example function here loads a reference 3D U-Net model from this package.
+To develop your own model, just add your layers to the top of the function and
+replace `model = unet3d()` with the standard Keras model instantiation.
+
+## Training A Synapse Detector
+
+The `main` function in `synapse_detector_training.py` contains code for loading
+data and training the model.
+
+```python
+def main():
+    # Define the input and output shapes of your model.
+    INPUT_SHAPE = (17, 512, 512, 1)
+    OUTPUT_SHAPE = (17, 512, 512, 1)
+
+    model = create_model(INPUT_SHAPE, OUTPUT_SHAPE)
+    raw, gt, dist = load()
+    # The load function can also be provided paths manually, like so:
+    # load(dataset=<path-to-raw-data>, gt=<path-to-gt)
+
+    # Create the training data generator
+    train_data = augmenting_generator(raw, gt, dist, INPUT_SHAPE,
+                                      OUTPUT_SHAPE, 50)
+
+    # Train the model with 50 batches per eposh over 50 epochs
+    model.fit_generator(train_data, 50, 50, verbose=2)
+
+    # Save the model to file. Rename the fiel as you see fit.
+    with open('model.json', 'w') as f:
+        json.dump(model.to_json(), f)
+
+    model.save_weights()
+```
+
+The line `raw, gt, dist = load()` will automatically load the synapse training
+set from `coxfs`.
+
+After training, be sure to save your model with
+
+```python
+    with open('model.json', 'w') as f:
+        json.dump(model.to_json(), f)
+
+    model.save_weights()
+```
+
+as shown in the `main` function.
+
+## Adding Custom Layers
+
+Custom layers must be added to the `custom_layers.py` script in the project
+directory. Add the custom layer class as usual under the `MyLayer` class, then
+register the layer at the bottom to allow imports into other modules:
+
+```python
+    custom_objects = {
+        'MyLayer': MyLayer,
+    #   'custom_layer': custom_layer
+    }
+
+    __all__ = ['custom_objects',
+               'MyLayer',
+            #  'custom_layer'
+               ]
+```
+
+This will enable the ARIADNE pipeline to reconstruct a model that uses the
+custom layer.
+
+For information about writing custom layers, see the [Keras documentation](https://faroit.github.io/keras-docs/1.2.2/layers/writing-your-own-keras-layers/)
+
+## Updating the Metadata File
+
+The `classifier.yaml` file contains a number of potential settings necessary
+for the ARIADNE pipeline to reconstruct a trained Keras model. Ensure that
+these settings are correct for your model.
+
+# Uploading a Model
+
+To upload a model, run the following command:
+
+```
+synapse-detector-development \
+    <path-to-model.json> \
+    <path-to-weights.h5> \
+    <path-to-classifier.yaml> \
+    [<path-to-custom_layers.py>, optional]
+```
+
+The command line will prompt you to name the model and provide other,
+information, then the model will be uploaded to the evaluation pipeline server
+to be processed.
