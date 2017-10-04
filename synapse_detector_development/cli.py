@@ -23,7 +23,8 @@ MODULE_DOC = __doc__
 def main(docstring=MODULE_DOC):
     arguments = docopt(docstring, version='0.0.1')
 
-    cmd = commands.get_command_class(arguments)
+    print(arguments)
+    cmd = commands.get_command_class(**arguments)
     if cmd is not None:
         cmd.run()
 
