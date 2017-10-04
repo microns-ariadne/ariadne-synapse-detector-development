@@ -6,6 +6,8 @@ import os
 import h5py
 import scipy.ndimage
 
+import rh_config
+
 
 class InvalidFileFormatError(Exception):
     def __init__(self, path):
@@ -31,7 +33,7 @@ def calculate_distance(gt):
     -----
     The output of this function is used to generate training examples that have
     """
-    return distance_transform_edt(gt == 0, (30, 4, 4))
+    return scipy.ndimage.distance_transform_edt(gt == 0, (30, 4, 4))
 
 
 def load_from_image(path):
@@ -116,7 +118,7 @@ def load_from_hdf5(path, key=None):
     with h5py.File(path, 'r') as f:
         try:
             x = f[key][:]
-        except KeyError:
+        except (KeyError, TypeError):
             x = f[f.keys()[0]][:]
 
     return x
@@ -144,9 +146,9 @@ def load_data(path):
     """
     _, ext = os.path.splitext(path)
 
-    if ext == 'json':
+    if ext == '.json':
         vol = load_from_json(path)
-    elif ext == 'h5':
+    elif ext == '.h5':
         vol = load_from_hdf5(path)
     elif os.path.isdir(path):
         vol = load_from_image(path)
@@ -155,13 +157,56 @@ def load_data(path):
 
     return vol
 
-def load(dataset, gt):
+
+def load(dataset=None, gt=None):
     """Load a dataset and associated ground truth.
 
+    In the event that the optional parameters are not passed, this function
+    attempts to load the ECS_iarpa_201610_gt_4x6x6 dataset from a
+    .rh-config.yaml file.
+
+    Parameters
+    ----------
+    dataset : str, optional
+        Path to the dataset to load.
+    gt : str, optional
+        Path to the ground truth to load.
+
+    Returns
+    -------
+    raw : `numpy.ndarray`
+        The raw training data.
+    gt : `numpy.ndarray`
+        The ground truth to train on.
+    dist : `numpy.ndarray`
+        Array where each element is the distance from the corresponding element
+        in ``gt`` to the nearest non-zerovalue in ``gt``.
     """
+    # Load the dataset from rh_config if none provided.
+    if dataset is None:
+        experiments = rh_config.config['bfly']['experiments']
+        for exp in experiments:
+            if exp['name'] == 'ECS_train_images':
+                for d in exp['datasets']:
+                    if d['name'] == 'sem':
+                        for channel in d['channels']:
+                            if channel['name'] == 'raw':
+                                dataset = channel['path']
+
+    # Load the ground truth from rh_config if none provided.
+    if gt is None:
+        experiments = rh_config.config['bfly']['experiments']
+        for exp in experiments:
+            if exp['name'] == 'ECS_train_images':
+                for d in exp['datasets']:
+                    if d['name'] == 'sem':
+                        for channel in d['channels']:
+                            if channel['name'] == 'gt':
+                                gt = channel['path']
+
     raw = load_data(dataset)
     gt = load_data(gt)
 
     dist = calculate_distance(gt)
 
-    return (raw, gt, distance)
+    return (raw, gt, dist)
