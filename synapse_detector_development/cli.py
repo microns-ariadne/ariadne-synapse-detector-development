@@ -1,16 +1,22 @@
 """
 ARIADNE Synapse Detector Development.
 
+Tools for synapse detector development for MICrONS Team 1 TA3.
+
 Usage:
-    asdd create [-n STRING] <path>
-    asdd upload <model-file> <weights-file> <metadata>
-    asdd -h | --help
-    asdd --version
+    synapse-detector-development [--version] [-h | --help] <command> [<args>...]
+    synapse-detector-development init [-n STRING] <path>
+    synapse-detector-development submit <model-file> <weights-file> <metadata>
+    synapse-detector-development -h | --help
+    synapse-detector-development --version
 
 Options:
     -h --help   Show this screen.
     --version   Show version.
-    -n STRING   Name of the new synapse detector. [default: synapse-detector]
+
+Commands for synapse detector development are:
+    init    Initialize a new synapse detector project with example files.
+    submit  Submit a synapse detector model for evaluation.
 
 """
 from synapse_detector_development import commands
