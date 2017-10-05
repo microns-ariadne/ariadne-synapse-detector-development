@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 ARIADNE Synapse Detector Development.
 
@@ -11,28 +12,46 @@ Usage:
     synapse-detector-development --version
 
 Options:
-    -h --help   Show this screen.
-    --version   Show version.
+    -h, --help   Show this screen.
+    --version    Show version.
 
 Commands for synapse detector development are:
     init    Initialize a new synapse detector project with example files.
     submit  Submit a synapse detector model for evaluation.
 
+Use synapse-detector-development help <command> for more information about a
+specific command.
+
 """
-from synapse_detector_development import commands
+import os
+import subprocess
+import sys
 
 from docopt import docopt
 
 
-MODULE_DOC = __doc__
-
-def main(docstring=MODULE_DOC):
+def main(docstring):
     arguments = docopt(docstring, version='0.0.1')
 
-    print(arguments)
-    cmd = commands.get_command_class(**arguments)
-    if cmd is not None:
-        cmd.run()
+    commands_dir = os.path.join(os.path.dirname(__file__), 'commands')
+    commands = os.listdir(commmands_dir)
+
+    cmdfile = '{}.py'.format(args['<command>'])
+    argv = arguments['<args>']
+    if len(argv) > 0:
+        helpcmd = '{}.py'.format(argv[0])
+
+    if cmdfile in commands:
+        args = [os.path.join(commands_dir, cmdfile)] + argv
+        sys.exit(subprocess.call(args))
+    elif arguments['command'] == 'help' and helpcmd in commands:
+        args = [os.path.join(commands_dir, helpcmd), '--help']
+        sys.exit(subprocess.call(args))
+    elif arguments['<command>'] in ['help', None]:
+        exit(call([__file__, '--help']))
+    else:
+        print('{} is not a valid command.'.format(arguments['<command>']))
+        sys.exit(docstring)
 
 
 if __name__ == '__main__':
