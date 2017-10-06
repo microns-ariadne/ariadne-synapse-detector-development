@@ -3,7 +3,10 @@ from .base import BaseCommand
 import getpass
 import json
 import os
+import shutil
+import subprocess
 import sys
+import tempfile
 try:
     # python 3
     from urllib.parse import urlencode
@@ -30,6 +33,8 @@ class UploadCommand(BaseCommand):
                           else os.path.join(os.getcwd(), 'weights.h5')
         self.metadata = kws['<metadata>'] if '<metadata>' in kws \
                           else os.path.join(os.getcwd(), 'classifier.yaml')
+        self.custom = kws['<custom-layer-file>'] if '<custom-layer-file>' in kws \
+                          else None
 
         self.password = getpass.getpass('Enter Submission Site Access Key: ')
         if sys.version_info[0] == 2:
@@ -109,21 +114,52 @@ class UploadCommand(BaseCommand):
         logger.report_event('Verifying Keras files')
 
         try:
-            with open(self.model_path, 'r') as f:
-                model = model_from_json(json.dumps(json.load(f)))
+            temp = tempfile.mkdtemp()
+            shutil.copy(self.model_path, temp)
+            shutil.copy(self.weights_path, temp)
+            if self.custom is not None:
+                shutil.copy(self.custom, temp)
+            try:
+                script = os.path.join(
+                    os.path.dirname(__file__),
+                    'validation',
+                    'keras_validation.py')
+                model = os.path.join(temp, self.model_path)
+                weights = os.path.join(temp, self.weights_path)
+                subprocess.call([script, model, weights], cwd=temp, shell=True)
+            except subprocess.CalledProcessError:
+                print('Ya done goofed')
+        #     with open(self.model_path, 'r') as f:
+        #         if self.custom is not None:
+        #             temp = tempfile.mkdtemp()
+        #             mod = os.path.join(temp, 'custom_layers')
+        #             os.mkdir(mod)
+        #             shutil.copy(self.custom, os.path.join(mod, 'custom_layers.py'))
+        #             open(os.path.join(mod, '__init__.py'), 'a').close()
+        #             print(sys.path)
+        #             sys.path.append(mod)
+        #             print(sys.path)
+        #             #try:
+        #             from custom_layers.custom_layers import custom_objects
+        #             #except ImportError:
+        #             #    custom_objects = {}
+        #         model = model_from_json(
+        #             json.dumps(json.load(f)),
+        #             custom_objects=custom_objects)
         except (OSError, IOError, ValueError, TypeError) as e:
+            print(e)
             logger.report_exception(
                 exception=e,
                 msg='Could not load Keras model from file {}'.format(self.model_path))
             return False
-
-        try:
-            model.load_weights(self.weights_path)
-        except (IOError, OSError) as e:
-            logger.report_exception(
-                exception=e,
-                msg='Could not load model weights from file {}'.format(self.weights_path))
-            return False
+        #
+        # try:
+        #     model.load_weights(self.weights_path)
+        # except (IOError, OSError) as e:
+        #     logger.report_exception(
+        #         exception=e,
+        #         msg='Could not load model weights from file {}'.format(self.weights_path))
+        #     return False
 
         return True
 
@@ -134,6 +170,7 @@ class UploadCommand(BaseCommand):
         c.setopt(c.URL, self.auth_url)
         c.setopt(c.POST, 1)
         c.setopt(c.POSTFIELDS, urlencode(post_data))
+        c.setopt(c.WRITEFUNCTION, lambda x: None)
 
         try:
             c.perform()
@@ -154,14 +191,20 @@ class UploadCommand(BaseCommand):
         """
         c.setopt(c.URL, self.upload_url)
         c.setopt(c.POST, 1)
+        c.setopt(c.WRITEFUNCTION, lambda x: None)
 
-        c.setopt(c.HTTPPOST, [
+        post_data = [
             ('model-name', 'TestModel'),
             ('model-author', 'Firstname Lastname'),
             ('model-desc', 'A test model'),
             ('model-file', (c.FORM_FILE, self.model_path)),
             ('model-weights', (c.FORM_FILE, self.weights_path)),
-            ('model-metadata', (c.FORM_FILE, self.metadata))])
+            ('model-metadata', (c.FORM_FILE, self.metadata))]
+
+        if self.custom is not None:
+            post_data.append(('custom-layer-file', (c.FORM_FILE, self.custom)))
+
+        c.setopt(c.HTTPPOST, post_data)
 
         try:
             c.perform()
