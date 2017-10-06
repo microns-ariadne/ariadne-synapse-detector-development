@@ -12,6 +12,7 @@ setup(
     packages=['synapse_detector_development',
               'synapse_detector_development.commands',
               'synapse_detector_development.commands.samples',
+              'synapse_detector_development.commands.validation',
               'synapse_detector_development.reference', ],
     include_package_data=True,
     install_requires=[
