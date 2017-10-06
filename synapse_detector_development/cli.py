@@ -4,9 +4,8 @@ ARIADNE Synapse Detector Development.
 Tools for synapse detector development for MICrONS Team 1 TA3.
 
 Usage:
-    synapse-detector-development [--version] [-h | --help] <command> [<args>...]
-    synapse-detector-development init [-n STRING] <path>
-    synapse-detector-development submit <model-file> <weights-file> <metadata>
+    synapse-detector-development create [-n STRING] <path>
+    synapse-detector-development upload <model-file> <weights-file> <metadata> <custom-layer-file>
     synapse-detector-development -h | --help
     synapse-detector-development --version
 
@@ -15,8 +14,8 @@ Options:
     --version   Show version.
 
 Commands for synapse detector development are:
-    init    Initialize a new synapse detector project with example files.
-    submit  Submit a synapse detector model for evaluation.
+    create  Initialize a new synapse detector project with example files.
+    upload  Submit a synapse detector model for evaluation.
 
 """
 from synapse_detector_development import commands
