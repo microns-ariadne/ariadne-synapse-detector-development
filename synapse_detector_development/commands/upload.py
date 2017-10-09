@@ -126,40 +126,15 @@ class UploadCommand(BaseCommand):
                     'keras_validation.py')
                 model = os.path.join(temp, self.model_path)
                 weights = os.path.join(temp, self.weights_path)
-                subprocess.call([script, model, weights], cwd=temp, shell=True)
+                subprocess.call([script, model, weights], cwd=temp)
             except subprocess.CalledProcessError:
                 print('Ya done goofed')
-        #     with open(self.model_path, 'r') as f:
-        #         if self.custom is not None:
-        #             temp = tempfile.mkdtemp()
-        #             mod = os.path.join(temp, 'custom_layers')
-        #             os.mkdir(mod)
-        #             shutil.copy(self.custom, os.path.join(mod, 'custom_layers.py'))
-        #             open(os.path.join(mod, '__init__.py'), 'a').close()
-        #             print(sys.path)
-        #             sys.path.append(mod)
-        #             print(sys.path)
-        #             #try:
-        #             from custom_layers.custom_layers import custom_objects
-        #             #except ImportError:
-        #             #    custom_objects = {}
-        #         model = model_from_json(
-        #             json.dumps(json.load(f)),
-        #             custom_objects=custom_objects)
         except (OSError, IOError, ValueError, TypeError) as e:
             print(e)
             logger.report_exception(
                 exception=e,
                 msg='Could not load Keras model from file {}'.format(self.model_path))
             return False
-        #
-        # try:
-        #     model.load_weights(self.weights_path)
-        # except (IOError, OSError) as e:
-        #     logger.report_exception(
-        #         exception=e,
-        #         msg='Could not load model weights from file {}'.format(self.weights_path))
-        #     return False
 
         return True
 

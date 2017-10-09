@@ -17,10 +17,10 @@ from keras.models import model_from_json
 
 sys.path.append(os.path.abspath('.'))
 
-try:
-    import custom_layers
-except ImportError:
-    custom_objects = {}
+#try:
+import custom_layers
+#except ImportError:
+#    custom_objects = {}
 
 
 MODULE_DOC = __doc__
@@ -57,4 +57,5 @@ def main(docstring=MODULE_DOC):
     validate(args['<model-file>'], args['<weights-file>'])
 
 if __name__ == '__main__':
+    print(sys.argv)
     sys.exit(main())

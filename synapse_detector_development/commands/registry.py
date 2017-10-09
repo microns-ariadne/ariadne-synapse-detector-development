@@ -1,10 +1,14 @@
 from .create import CreateCommand
+from .classifier import PickleCommand
+from .evaluate import EvaluateCommand
 from .upload import UploadCommand
 
 
 REGISTERED_COMMANDS = {
     'create': CreateCommand,
-    'upload': UploadCommand
+    'upload': UploadCommand,
+    'pickle': PickleCommand,
+    'evaluate': EvaluateCommand
 }
 
 

@@ -28,9 +28,7 @@ fi
 #
 #######################################################################
 
-MICRONS_CLASSIFIER=$MICRONS_ROOT_DIR/syanpse-classifier.pkl
-
-python pickle_synapse_classifier.py $MICRONS_CLASSIFIER
+MICRONS_CLASSIFIER=$MICRONS_ROOT_DIR/synapse-classifier.pkl
 
 #######################################################################
 #
