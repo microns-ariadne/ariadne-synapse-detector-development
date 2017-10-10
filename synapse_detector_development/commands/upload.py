@@ -15,7 +15,6 @@ except ImportError:
     from urllib import urlencode
 
 import h5py
-from keras.models import model_from_json
 import pycurl
 import yaml
 
@@ -44,7 +43,7 @@ class UploadCommand(BaseCommand):
         self.author = raw_input('Model Author: ')
         self.desc = raw_input('Short Description of the Model: ')
 
-        self.url = 'http://localhost:5000'
+        self.url = 'http://138.197.67.50'
         self.auth_url = '/'.join([self.url, 'login'])
         self.upload_url = '/'.join([self.url, 'upload'])
 

@@ -50,7 +50,8 @@ class EvaluateCommand(BaseCommand):
         try:
             meta = os.path.join(temp, os.path.basename(self.metadata))
             args = ['synapse-detector-development', 'pickle', meta]
-            subprocess.call(args, cwd=temp)
+            env = {'CUDA_VISIBLE_DEVICES': '2'}
+            subprocess.call(args, cwd=temp, env=dict(os.environ, **env))
         except subprocess.CalledProcessError:
             print('fuck fuck fuck')
 
@@ -65,7 +66,8 @@ class EvaluateCommand(BaseCommand):
             'MICRONS_ROOT_DIR': temp,
             'RH_CONFIG_FILENAME': os.path.join(
                 temp,
-                os.path.basename(self.rh_config))
+                os.path.basename(self.rh_config)),
+            'CUDA_VISIBLE_DEVICES': '1',
         }
 
         for k in env:

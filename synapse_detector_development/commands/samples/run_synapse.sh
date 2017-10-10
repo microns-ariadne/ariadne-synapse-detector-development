@@ -65,8 +65,8 @@ SCRIPTPATH=`dirname $SCRIPT`
 #
 #---------------------------------------------------------------
 MICRONS_LUIGI_DB=sqlite:///$MICRONS_TMP_DIR/luigi-task-hist.db
-ORIG_RH_CONFIG_FILENAME=$SCRIPTPATH/lab-rh-config.yaml
-export RH_CONFIG_FILENAME=$MICRONS_TMP_DIR/.rh-config.yaml
+ORIG_RH_CONFIG_FILENAME=$MICRONS_TMP_DIR/lab-rh-config.yaml
+export RH_CONFIG_FILENAME=$MICRONS_TMP_DIR/lab-rh-config.yaml
 
 python -c 'import yaml;cfg=yaml.safe_load(open("'$ORIG_RH_CONFIG_FILENAME'"));cfg["luigid"]["db_connection"]="'$MICRONS_LUIGI_DB'";yaml.dump(cfg,open("'$RH_CONFIG_FILENAME'","w"))'
 
@@ -93,8 +93,8 @@ MICRONS_IPC_WORKER_PID=$!
 ##################################################################
 
 MICRONS_BUTTERFLY_PORT=2198
-bfly $MICRONS_BUTTERFLY_PORT \
-     > "$MICRONS_TMP_DIR"/bfly.log \
+bfly -e $RH_CONFIG_FILENAME $MICRONS_BUTTERFLY_PORT \
+    > "$MICRONS_TMP_DIR"/bfly.log \
     2>> "$MICRONS_TMP_DIR"/bfly.err &
 BFLY_PROCESS="$!"
 
