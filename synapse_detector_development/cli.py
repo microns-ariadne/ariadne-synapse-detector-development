@@ -4,8 +4,8 @@ ARIADNE Synapse Detector Development.
 Tools for synapse detector development for MICrONS Team 1 TA3.
 
 Usage:
-    synapse-detector-development create [--metadata-only] [<name> <path>]
-    synapse-detector-development upload <model-file> <weights-file> <metadata> <custom-layer-file>
+    synapse-detector-development create [--copy-metadata] [--copy-custom-layers] [<name> <path>]
+    synapse-detector-development upload <model-file> <weights-file> <metadata> [<custom-layer-file>]
     synapse-detector-development pickle <metadata>
     synapse-detector-development evaluate <model-file> <weights-file> <metadata> [<custom-layer-file>] [<rh-config>]
     synapse-detector-development -h | --help

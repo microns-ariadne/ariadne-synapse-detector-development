@@ -33,9 +33,12 @@ class CreateCommand(BaseCommand):
 
         self.name = kws['<name>'] if '<name>' in kws else 'synapse-detector'
 
-        self.meta_only = kws['--metadata-only'] if '--metadata-only' in kws \
+        self.copy_meta = kws['--copy-metadata'] if '--copy-metadata' in kws \
                          else False
 
+        self.copy_custom = kws['--copy-custom-layers'] if '--copy-custom-layers' in kws \
+                         else False
+        
         self.sample_file_path = os.path.join(
             os.path.dirname(__file__),
             'samples')
@@ -53,13 +56,19 @@ class CreateCommand(BaseCommand):
         logger.report_event(
             'Initializing new synapse detector {}'.format(self.name))
 
-        if self.meta_only:
+        if self.copy_meta:
             self.copy_metadata_file(os.getcwd())
-            logger.report_event(
-                'Created metadata file at {}'.format(os.getcwd()))
+        
+        if self.copy_custom:
+            self.copy_custom_layer_file(os.getcwd())
+       
+        if self.copy_meta or self.copy_custom:
             return True
 
-        project_path = self.create_project_directory()
+        if self.path is not None:
+            project_path = self.create_project_directory()
+        else:
+            project_path = None
 
         if project_path is not None:
             s1 = self.copy_sample_file(project_path)
@@ -137,7 +146,7 @@ class CreateCommand(BaseCommand):
             pass
 
         logger.report_event(
-            'Copying sample training file to {}'.format(project_path))
+            'Copying custom layers file to {}'.format(project_path))
 
         # Copy the sample training file to the
         try:
@@ -149,12 +158,12 @@ class CreateCommand(BaseCommand):
         except IOError as e:
             logger.report_exception(
                 exception=e,
-                msg='Could not copy sample training file.')
+                msg='Could not copy custom layers script.')
             return False
 
         logger.report_event(
-            'Sample File: {}'.format(
-                os.path.join(project_path, 'synapse_detector_training.py')))
+            'Custom Layers File: {}'.format(
+                os.path.join(project_path, 'custom_layers.py')))
 
         return True
 
