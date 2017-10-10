@@ -6,8 +6,6 @@ import os
 import h5py
 import scipy.ndimage
 
-import rh_config
-
 
 class InvalidFileFormatError(Exception):
     def __init__(self, path):
@@ -182,27 +180,22 @@ def load(dataset=None, gt=None):
         Array where each element is the distance from the corresponding element
         in ``gt`` to the nearest non-zerovalue in ``gt``.
     """
-    # Load the dataset from rh_config if none provided.
-    if dataset is None:
+    # Load the dataset and/or gt from rh_config if none provided.
+    if dataset is None or gt is None:
+        os.putenv('RH_CONFIG_FILENAME', os.path.join(os.getcwd(), 'lab-rh-config.yaml'))
+        import rh_config
         experiments = rh_config.config['bfly']['experiments']
         for exp in experiments:
-            if exp['name'] == 'ECS_train_images':
-                for d in exp['datasets']:
-                    if d['name'] == 'sem':
-                        for channel in d['channels']:
-                            if channel['name'] == 'raw':
-                                dataset = channel['path']
-
-    # Load the ground truth from rh_config if none provided.
-    if gt is None:
-        experiments = rh_config.config['bfly']['experiments']
-        for exp in experiments:
-            if exp['name'] == 'ECS_train_images':
-                for d in exp['datasets']:
-                    if d['name'] == 'sem':
-                        for channel in d['channels']:
-                            if channel['name'] == 'gt':
-                                gt = channel['path']
+            if exp['name'] == 'ECS_iarpa_201610_gt_4x6x6':
+                for sample in exp['samples']:
+                    if sample['name'] == 'neocortex':
+                        for d in sample['datasets']:
+                            if d['name'] == 'sem':
+                                for channel in d['channels']:
+                                    if channel['name'] == 'raw' and dataset is None:
+                                        dataset = channel['path']
+                                    if channel['name'] == 'synapse' and gt is None:
+                                        gt = channel['path']
 
     raw = load_data(dataset)
     gt = load_data(gt)
