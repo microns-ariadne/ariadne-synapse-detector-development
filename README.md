@@ -178,7 +178,7 @@ For information about writing custom layers, see the [Keras documentation](https
 
 # Evaluating a Model Locally
 
-Once the model is trained, run a local evaluation using the [ARIADNE pipeline]((https://github.com/microns-ariadne/pipeline_engine) with
+Once the model is trained, run a local evaluation using the [ARIADNE pipeline](https://github.com/microns-ariadne/pipeline_engine) with
 
 ```
 $ synapse-detector-development evaluate <model-file> <weights-file> <metadata-file> <custom-layers-file>
