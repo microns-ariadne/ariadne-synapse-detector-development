@@ -217,7 +217,7 @@ The command line will prompt you to name the model and provide other,
 information, then the model will be uploaded to the evaluation pipeline server
 to be processed.
 
-# Preparing an Existing Model
+# Incorporating an Existing Model
 
 Existing Keras models may be prepared for submission by following these steps:
 
