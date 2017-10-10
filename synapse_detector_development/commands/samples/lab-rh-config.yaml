@@ -86,7 +86,7 @@ bfly:
           channels:
           - name: raw
             datasource: hdf5
-            path: /n/coxfs01/data/butterfly/ECS_iarpa201610_all_annotation/gt-4x6x6/gt-4x6x6_image.json
+            path: /afs/crc.nd.edu/group/cvrl/scratch_11/ariadne/gt-4x6x6/gt-4x6x6_image.json
             short-description: raw
             data-type: uint8
             dimensions:
@@ -95,7 +95,7 @@ bfly:
               z: 145
           - name: gt
             datasource: hdf5
-            path: /n/coxfs01/data/butterfly/ECS_iarpa201610_all_annotation/gt-4x6x6/seg_groundtruth0.json
+            path: /afs/crc.nd.edu/group/cvrl/scratch_11/ariadne/gt-4x6x6/seg_groundtruth0.json
             short-description: labels
             data-type: uint32
             dimensions:
@@ -104,7 +104,7 @@ bfly:
               z: 145
           - name: synapse
             datasource: hdf5
-            path: /n/coxfs01/data/butterfly/ECS_iarpa201610_all_annotation/gt-4x6x6/synapse_groundtruth.json
+            path: /afs/crc.nd.edu/group/cvrl/scratch_11/ariadne/gt-4x6x6/synapse_groundtruth.json
             short-description: synapse-labels
             data-type: uint32
             dimensions:
@@ -115,9 +115,9 @@ ipc:
   address: tcp://127.0.0.1:7051
 
 neuroproof:
-  neuroproof_graph_predict: path-to/fast_neuroproof/build/NeuroProof_plan
+  neuroproof_graph_predict: /afs/crc.nd.edu/user/j/jkinniso/Private/microns/pipeline_engine/neuroproof/MIT_agg/MIT_agg/neuroproof_agg/npclean/build/NeuroProof_plan
   ld_library_path:
-    - path-to/cilkplus-install/lib64
+      - /afs/crc.nd.edu/user/j/jkinniso/Private/microns/cilkplus/cilkplus-install/lib64
 
 luigid:
   db_connection: sqlite:////path-to/.luigid/luigi-task-hist.db

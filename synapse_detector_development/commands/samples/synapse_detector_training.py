@@ -5,6 +5,7 @@ synapse detection and save the trained model for submission to the evaluation
 framework at the University of Notre Dame.
 """
 import json
+import numpy as np
 
 ###############################################################################
 # Setup
@@ -55,7 +56,7 @@ from keras.optimizers import Adam
 # using the standard Keras layers.
 
 def create_model(in_shape, out_shape):
-    model = unet3d()
+    model = unet3d(input_shape=in_shape)
     model.compile(loss='cosine_proximity', optimizer='adam')
     return model
 
@@ -74,26 +75,29 @@ def create_model(in_shape, out_shape):
 
 def main():
     # Define the input and output shapes of your model.
-    INPUT_SHAPE = (17, 512, 512, 1)
-    OUTPUT_SHAPE = (17, 512, 512, 1)
+    INPUT_SHAPE = (1, 32, 316, 316)
+    OUTPUT_SHAPE = (1, 32, 316, 316)
 
     model = create_model(INPUT_SHAPE, OUTPUT_SHAPE)
     raw, gt, dist = load()
+    print(raw.shape)
     # The load function can also be provided paths manually, like so:
     # load(dataset=<path-to-raw-data>, gt=<path-to-gt)
 
     # Create the training data generator
-    train_data = augmenting_generator(raw, gt, dist, INPUT_SHAPE,
-                                      OUTPUT_SHAPE, 50)
+    x = np.expand_dims(np.copy(raw[56:-57, 590:-590, 590:-590]), axis=0)
+    x = np.expand_dims(x, axis=0).astype(np.uint8)
+    y = np.expand_dims(np.copy(gt[56:-57, 592:-592, 592:-592]), axis=0)
+    y = np.expand_dims(y, axis=0).astype(np.uint8)
 
     # Train the model with 50 batches per eposh over 50 epochs
-    model.fit_generator(train_data, 50, 50, verbose=2)
+    model.fit(x, y, 1, 1, verbose=2)
 
     # Save the model to file. Rename the fiel as you see fit.
     with open('model.json', 'w') as f:
         json.dump(model.to_json(), f)
 
-    model.save_weights()
+    model.save_weights('weights.h5')
 
 
 if __name__ == '__main__':

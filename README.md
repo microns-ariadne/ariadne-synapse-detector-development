@@ -65,11 +65,26 @@ To verify installation, run `synapse-detector-development --help`. If installed
 correctly, this will display the possible commands to run.
 
 ```
+ARIADNE Synapse Detector Development.
+
+Tools for synapse detector development for MICrONS Team 1 TA3.
+
 Usage:
-    synapse-detector-development create [-n STRING] <path>
-    synapse-detector-development upload <model-file> <weights-file> <metadata> <custom-layers-file>
+    synapse-detector-development create [--metadata-only] [<name> <path>]
+    synapse-detector-development upload <model-file> <weights-file> <metadata> <custom-layer-file>
+    synapse-detector-development pickle <metadata>
+    synapse-detector-development evaluate <model-file> <weights-file> <metadata> [<custom-layer-file>] [<rh-config>]
     synapse-detector-development -h | --help
     synapse-detector-development --version
+
+Options:
+    -h --help   Show this screen.
+    --version   Show version.
+
+Commands for synapse detector development are:
+    create    Initialize a new synapse detector project with example files.
+    evaluate  Run a trained classifier through the ARIADNE pipeline.
+    upload    Submit a synapse detector model for evaluation.
 ```
 
 # Creating a New Synapse Detector Project
@@ -77,7 +92,7 @@ Usage:
 To initialize a new project, run
 
 ```
-$ synapse-detector-development create -n myproject $HOME
+$ synapse-detector-development create myproject $HOME
 ```
 
 This will create a new directory `myproject` in your home directory. To change
@@ -117,26 +132,29 @@ data and training the model.
 ```python
 def main():
     # Define the input and output shapes of your model.
-    INPUT_SHAPE = (17, 512, 512, 1)
-    OUTPUT_SHAPE = (17, 512, 512, 1)
+    INPUT_SHAPE = (1, 32, 316, 316)
+    OUTPUT_SHAPE = (1, 32, 316, 316)
 
     model = create_model(INPUT_SHAPE, OUTPUT_SHAPE)
     raw, gt, dist = load()
+    print(raw.shape)
     # The load function can also be provided paths manually, like so:
     # load(dataset=<path-to-raw-data>, gt=<path-to-gt)
 
     # Create the training data generator
-    train_data = augmenting_generator(raw, gt, dist, INPUT_SHAPE,
-                                      OUTPUT_SHAPE, 50)
+    x = np.expand_dims(np.copy(raw[56:-57, 590:-590, 590:-590]), axis=0)
+    x = np.expand_dims(x, axis=0).astype(np.uint8)
+    y = np.expand_dims(np.copy(gt[56:-57, 592:-592, 592:-592]), axis=0)
+    y = np.expand_dims(y, axis=0).astype(np.uint8)
 
-    # Train the model with 50 batches per epochs over 50 epochs
-    model.fit_generator(train_data, 50, 50, verbose=2)
+    # Train the model with 50 batches per eposh over 50 epochs
+    model.fit(x, y, 1, 1, verbose=2)
 
-    # Save the model to file. Rename the file as you see fit.
+    # Save the model to file. Rename the fiel as you see fit.
     with open('model.json', 'w') as f:
         json.dump(model.to_json(), f)
 
-    model.save_weights()
+    model.save_weights('weights.h5')
 ```
 
 The line `raw, gt, dist = load()` will automatically load the synapse training
