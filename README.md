@@ -58,6 +58,7 @@ $ pip install .
 $ source activate ariadne_microns_pipeline
 $ git clone https://github.com/microns-ariadne/ariadne-synapse-detector-development
 $ cd ariadne-synapse-detector-development
+$ conda install pycurl
 $ pip install --editable .
 ```
 
