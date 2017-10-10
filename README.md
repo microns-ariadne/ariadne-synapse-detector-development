@@ -14,13 +14,17 @@ models to an evaluation framework.
 
 [Developing a New Synapse Detector](#developing-a-new-synapse-detector)
 
-[Training A Synapse Detector](#training-a-synapse-detector)
+[Training a Synapse Detector](#training-a-synapse-detector)
 
 [Adding Custom Layers (Optional)](#adding-custom-layers-optional)
+
+[Evaluating a Model Locally](#evaluating-a-model-locally)
 
 [Updating the Metadata File](#updating-the-metadata-file)
 
 [Uploading a Model](#uploading-a-model)
+
+[Incorporating an Existing Model](#incorporating-an-existing-model)
 
 # Dependencies
 
@@ -71,7 +75,7 @@ Usage:
 To initialize a new project, run
 
 ```
-synapse-detector-development create -n myproject $HOME
+$ synapse-detector-development create -n myproject $HOME
 ```
 
 This will create a new directory `myproject` in your home directory. To change
@@ -82,6 +86,7 @@ the project location, replace `$HOME` with a different filepath. The
 myproject
 ├── classifier.yaml
 ├── custom_layers.py
+├── lab-rh-config.yaml 
 └── synapse_detector_training.py
 ```
 
@@ -171,6 +176,14 @@ custom layer.
 
 For information about writing custom layers, see the [Keras documentation](https://faroit.github.io/keras-docs/1.2.2/layers/writing-your-own-keras-layers/)
 
+# Evaluating a Model Locally
+
+Once the model is trained, run a local evaluation using the [ARIADNE pipeline]((https://github.com/microns-ariadne/pipeline_engine) with
+
+```
+$ synapse-detector-development evaluate <model-file> <weights-file> <metadata-file> <custom-layers-file>
+```
+
 # Updating the Metadata File
 
 The `classifier.yaml` file contains a number of potential settings necessary
@@ -203,3 +216,21 @@ synapse-detector-development upload \
 The command line will prompt you to name the model and provide other,
 information, then the model will be uploaded to the evaluation pipeline server
 to be processed.
+
+# Preparing an Existing Model
+
+Existing Keras models may be prepared for submission by following these steps:
+
+1. Train the model and save the structure and weights as follows:
+    
+    ```python
+    import json
+    # Filenames may be replaced with something more meaningful
+    json.dump(model.to_json(), open('model.json', 'w'))
+    model.save_weights('weights.h5')
+    ```
+
+2. Run `synapse-detector-development create --copy-metadata` from the directory containing the model and weights files from the previous step.
+3. Update `classifier.yaml` as described [here](#updating-the-metadata-file)
+4. (optional) Run `synapse-detector-development create --copy-custom-layers` and update `custom_layers.py` as described [here](#adding-custom-layers-optional)
+5. Submit the model as described [here](#uploading-a-model)
