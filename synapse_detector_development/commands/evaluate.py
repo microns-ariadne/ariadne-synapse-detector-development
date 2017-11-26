@@ -29,7 +29,7 @@ class EvaluateCommand(BaseCommand):
 
         self.rh_config = os.path.abspath(kws['<rh-config>']) \
             if '<rh-config>' in kws and kws['<rh-config>'] is not None \
-            else os.path.join(os.path.dirname(__file__), samples, 'lab-rh-config.yaml')
+            else os.path.join(os.path.dirname(__file__), 'samples', 'lab-rh-config.yaml')
 
     def run(self):
         temp = self.prep()
