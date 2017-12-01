@@ -51,9 +51,14 @@ class EvaluateCommand(BaseCommand):
             meta = os.path.join(temp, os.path.basename(self.metadata))
             args = ['synapse-detector-development', 'pickle', meta]
             env = {'CUDA_VISIBLE_DEVICES': '2'}
-            subprocess.call(args, cwd=temp, env=dict(os.environ, **env))
-        except subprocess.CalledProcessError:
-            print('fuck fuck fuck')
+            subprocess.check_output(args,
+                                    cwd=temp,
+                                    stderr=subprocess.STDERR,
+                                    env=dict(os.environ, **env))
+        except subprocess.CalledProcessError as e:
+            print('Could not pickle the file:')
+            print(e)
+            sys.exit(1)
 
     def evaluate(self, temp):
         script = os.path.join(
@@ -76,9 +81,14 @@ class EvaluateCommand(BaseCommand):
         args = ['bash', script]
 
         try:
-            subprocess.check_call(args, cwd=temp, env=dict(os.environ, **env))
-        except subprocess.CalledProcessError:
-            print('AAAAAAAHHHHH IT FAILED!!!!')
+            subprocess.check_output(args,
+                                    cwd=temp,
+                                    stderr=subprocess.STDOUT,
+                                    env=dict(os.environ, **env))
+        except subprocess.CalledProcessError as e:
+            print('Could not evaluate model:')
+            print(e)
+            sys.exit(1)
 
     def compute_statistics(self):
         pass

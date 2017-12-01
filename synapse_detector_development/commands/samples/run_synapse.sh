@@ -55,8 +55,12 @@ fi
 # Set up RH_CONFIG to point to lab-rh-config.yaml
 #
 ###################################################################
-SCRIPT=`realpath $0`
-SCRIPTPATH=`dirname $SCRIPT`
+if [ -x "$(command -v realpath)" ]; then
+    SCRIPT="$(realpath $0)"
+else
+    SCRIPT="$(readlink -e $0)"
+fi
+SCRIPTPATH="$(dirname $SCRIPT)"
 
 #----------------------------------------------------------------
 #
@@ -170,5 +174,3 @@ kill "$BFLY_PROCESS"
 kill "$LUIGID_PROCESS"
 kill "$MICRONS_IPC_BROKER_PID"
 kill "$MICRONS_IPC_WORKER_PID"
-
-
