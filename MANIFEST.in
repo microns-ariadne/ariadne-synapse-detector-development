@@ -1,1 +1,2 @@
-include synapse_detector_development/commands/samples/classifier.yaml
+include synapse_detector_development/commands/samples/example_classifier.yaml
+include synapse_detector_development/commands/samples/lab-rh-config.yaml
