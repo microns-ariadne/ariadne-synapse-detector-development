@@ -162,6 +162,7 @@ luigi --module ariadne_microns_pipeline.pipelines.synapse_score_pipeline \
       --synapse-report-path=$MICRONS_ROOT_DIR/report.json \
       >> $MICRONS_TMP_DIR/luigi.log \
       2>> $MICRONS_TMP_DIR/luigi.err.log
+status=$?
 set +x
 
 #-------------------------------------------------------------------
@@ -174,3 +175,8 @@ kill "$BFLY_PROCESS"
 kill "$LUIGID_PROCESS"
 kill "$MICRONS_IPC_BROKER_PID"
 kill "$MICRONS_IPC_WORKER_PID"
+
+if [ "$status" -ne "0" ];
+    cat "$MICRONS_TMP_DIR/luigi.err.log"
+    exit 1
+fi
