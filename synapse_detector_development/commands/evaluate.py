@@ -90,8 +90,32 @@ class EvaluateCommand(BaseCommand):
             print(e)
             sys.exit(1)
 
-    def compute_statistics(self):
-        pass
+        respath = os.path.join(env['MICRONS_ROOT_DIR'], 'report.json')
+        try:
+            with open(respath, 'r') as f:
+                res = json.load(f)
+        except (IOError, OSError, ValueError) as e:
+            print('Could not load results:')
+            print(e)
+            sys.exit(1)
+
+        return res
+
+    def compute_statistics(self, result):
+        """
+        """
+        p = result['precision']
+        r = result['recall']
+
+        nri = (2.0 * p * r) / (p + r)
+        result['nri'] = nri
+
+        print('Precision: {}'.format(p))
+        print('Recall: {}'.format(r))
+        print('NRI: {}'.format(nri))
+
+        with open('report.json', 'w') as f:
+            json.dump(result, f)
 
     def cleanup(self, temp):
         shutil.rmtree(temp)
