@@ -42,7 +42,10 @@ class EvaluateCommand(BaseCommand):
         shutil.copy(self.model_path, temp)
         shutil.copy(self.weights_path, temp)
         shutil.copy(self.metadata, temp)
-        shutil.copy(self.custom_layers, temp)
+        try:
+            shutil.copy(self.custom_layers, temp)
+        except (IOError, OSError, AttributeError, TypeError) as e:
+            pass
         shutil.copy(self.rh_config, temp)
         return temp
 
