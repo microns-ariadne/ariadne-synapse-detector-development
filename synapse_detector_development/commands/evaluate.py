@@ -56,7 +56,7 @@ class EvaluateCommand(BaseCommand):
             env = {'CUDA_VISIBLE_DEVICES': '2'}
             subprocess.check_output(args,
                                     cwd=temp,
-                                    stderr=subprocess.STDERR,
+                                    stderr=subprocess.STDOUT,
                                     env=dict(os.environ, **env))
         except subprocess.CalledProcessError as e:
             print('Could not pickle the file:')
