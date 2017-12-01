@@ -61,7 +61,7 @@ class EvaluateCommand(BaseCommand):
         except subprocess.CalledProcessError as e:
             print('Could not pickle the file:')
             print(e)
-            print(out)
+            print(e.output)
             sys.exit(1)
 
     def evaluate(self, temp):
@@ -92,7 +92,7 @@ class EvaluateCommand(BaseCommand):
         except subprocess.CalledProcessError as e:
             print('Could not evaluate model:')
             print(e)
-            print(out)
+            print(e.output)
             sys.exit(1)
 
         respath = os.path.join(env['MICRONS_ROOT_DIR'], 'report.json')
