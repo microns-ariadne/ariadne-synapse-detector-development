@@ -54,13 +54,14 @@ class EvaluateCommand(BaseCommand):
             meta = os.path.join(temp, os.path.basename(self.metadata))
             args = ['synapse-detector-development', 'pickle', meta]
             env = {'CUDA_VISIBLE_DEVICES': '2'}
-            subprocess.check_output(args,
-                                    cwd=temp,
-                                    stderr=subprocess.STDOUT,
-                                    env=dict(os.environ, **env))
+            out = subprocess.check_output(args,
+                                          cwd=temp,
+                                          stderr=subprocess.STDOUT,
+                                          env=dict(os.environ, **env))
         except subprocess.CalledProcessError as e:
             print('Could not pickle the file:')
             print(e)
+            print(out)
             sys.exit(1)
 
     def evaluate(self, temp):
@@ -84,13 +85,14 @@ class EvaluateCommand(BaseCommand):
         args = ['bash', script]
 
         try:
-            subprocess.check_output(args,
-                                    cwd=temp,
-                                    stderr=subprocess.STDOUT,
-                                    env=dict(os.environ, **env))
+            out = subprocess.check_output(args,
+                                          cwd=temp,
+                                          stderr=subprocess.STDOUT,
+                                          env=dict(os.environ, **env))
         except subprocess.CalledProcessError as e:
             print('Could not evaluate model:')
             print(e)
+            print(out)
             sys.exit(1)
 
         respath = os.path.join(env['MICRONS_ROOT_DIR'], 'report.json')
