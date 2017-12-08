@@ -86,6 +86,39 @@ bfly:
           channels:
           - name: raw
             datasource: hdf5
+            path: /n/coxfs01/data/butterfly/ECS_iarpa201610_all_annotation/gt-4x6x6/gt-4x6x6_image.json
+            short-description: raw
+            data-type: uint8
+            dimensions:
+              x: 1496
+              y: 1496
+              z: 145
+          - name: gt
+            datasource: hdf5
+            path: /n/coxfs01/data/butterfly/ECS_iarpa201610_all_annotation/gt-4x6x6/seg_groundtruth0.json
+            short-description: labels
+            data-type: uint32
+            dimensions:
+              x: 1496
+              y: 1496
+              z: 145
+          - name: synapse
+            datasource: hdf5
+            path: /n/coxfs01/data/butterfly/ECS_iarpa201610_all_annotation/gt-4x6x6/synapse_groundtruth.json
+            short-description: synapse-labels
+            data-type: uint32
+            dimensions:
+              x: 1496
+              y: 1496
+              z: 145
+    - name: ECS_iarpa_201610_gt_4x6x6_nd
+      samples:
+      - name: neocortex
+        datasets:
+        - name: sem
+          channels:
+          - name: raw
+            datasource: hdf5
             path: /afs/crc.nd.edu/group/cvrl/scratch_11/ariadne/gt-4x6x6/gt-4x6x6_image.json
             short-description: raw
             data-type: uint8
