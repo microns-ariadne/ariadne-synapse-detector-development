@@ -13,6 +13,8 @@
 # to activate the conda environment.
 #
 ########################
+source ~jkinniso/Public/apps/x86_64/scripts/env.sh
+module load cuda/8.0 cudnn/v5.1
 
 if [ ! -d $MICRONS_TMP_DIR ]; then
     mkdir -p $MICRONS_TMP_DIR

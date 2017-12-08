@@ -76,7 +76,7 @@ class EvaluateCommand(BaseCommand):
             'RH_CONFIG_FILENAME': os.path.join(
                 temp,
                 os.path.basename(self.rh_config)),
-            'CUDA_VISIBLE_DEVICES': '1',
+            #'CUDA_VISIBLE_DEVICES': '1',
         }
 
         for k in env:
@@ -85,6 +85,7 @@ class EvaluateCommand(BaseCommand):
         args = ['bash', script]
 
         try:
+            print(os.environ)
             out = subprocess.check_output(args,
                                           cwd=temp,
                                           stderr=subprocess.STDOUT,

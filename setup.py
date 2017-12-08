@@ -18,7 +18,7 @@ setup(
     install_requires=[
         'docopt',
         'h5py',
-        'keras==1.2.2',
+        'keras',
         'numpy',
         'pycurl',
         'pyyaml',
