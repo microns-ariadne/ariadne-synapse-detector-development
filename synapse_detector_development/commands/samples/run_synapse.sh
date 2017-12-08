@@ -178,7 +178,7 @@ kill "$LUIGID_PROCESS"
 kill "$MICRONS_IPC_BROKER_PID"
 kill "$MICRONS_IPC_WORKER_PID"
 
-if [ "$status" -ne "0" ];
+if [ "$status" -ne "0" ]; then
     cat "$MICRONS_TMP_DIR/luigi.err.log"
     exit 1
 fi
